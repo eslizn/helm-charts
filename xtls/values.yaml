@@ -8,9 +8,8 @@ image:
 
 options:
   inbounds:
-    - listen: 0.0.0.0
+    - protocol: vless
       port: 443
-      protocol: vless
       settings:
         clients:
           - id: 87d18621-3e45-4b27-845b-e4b404cc207d

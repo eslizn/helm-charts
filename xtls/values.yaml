@@ -1,18 +1,42 @@
 replicaCount: 1
 
 image:
-  repository: myelectronix/xtls-reality
+  repository: ghcr.io/xtls/xray-core
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: latest
 
-service:
-  type: ClusterIP
-  port: 443
-  sni: "www.samsung.com"
-  shortID: "aabbccdd"
+options:
+  inbounds:
+    - listen: 0.0.0.0
+      port: 443
+      protocol: vless
+      settings:
+        clients:
+          - id: a105cb44-d85d-4f76-a6d0-fcfae2319010
+            flow: xtls-rprx-vision
+        decryption: none
+      streamSettings:
+        network: tcp
+        security: reality
+        realitySettings:
+          show: false
+          dest: example.com:443
+          xver: 0
+          serverNames:
+            - www.samsung.com
+          privateKey:
+          minClientVer:
+          maxClientVer:
+          maxTimeDiff: 0
+          shortIds:
+            - aabbccdd
+
+ingress:
   entryPoints:
     - websecure
+  sni: www.samsung.com
+  port: 443
 
 resources:
    limits:

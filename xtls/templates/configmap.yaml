@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "xtls.fullname" . }}
+  labels:
+    {{- include "xtls.labels" . | nindent 4 }}
+data:
+  config.json: |-
+    {{ .Values.options | toJson }}

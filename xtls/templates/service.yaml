@@ -5,9 +5,9 @@ metadata:
   labels:
     {{- include "xtls.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: ClusterIP
   ports:
-    - port: {{ .Values.service.port }}
+    - port: 443
       targetPort: https
       protocol: TCP
       name: https
@@ -22,12 +22,12 @@ metadata:
     {{- include "xtls.labels" . | nindent 4 }}
 spec:
   entryPoints:
-    {{- toYaml .Values.service.entryPoints | nindent 4 }}
+    {{- toYaml .Values.ingress.entryPoints | nindent 4 }}
   routes:
-    - match: HostSNI(`{{ .Values.service.sni }}`)
+    - match: HostSNI(`{{ .Values.ingress.sni }}`)
       services:
         - name: {{ include "xtls.fullname" . }}
-          port: {{ .Values.service.port }}
+          port: {{ .Values.ingress.port }}
           proxyProtocol:
             version: 2
   tls:

@@ -1,0 +1,29 @@
+replicaCount: 1
+
+image:
+  repository: myelectronix/xtls-reality
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: latest
+
+service:
+  type: ClusterIP
+  port: 443
+  sni: "www.samsung.com"
+  shortID: "aabbccdd"
+  entryPoints:
+    - websecure
+
+resources:
+   limits:
+     cpu: 100m
+     memory: 128Mi
+   requests:
+     cpu: 100m
+     memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

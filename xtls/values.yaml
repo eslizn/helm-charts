@@ -13,7 +13,7 @@ options:
       protocol: vless
       settings:
         clients:
-          - id: a105cb44-d85d-4f76-a6d0-fcfae2319010
+          - id: 87d18621-3e45-4b27-845b-e4b404cc207d
             flow: xtls-rprx-vision
         decryption: none
       streamSettings:

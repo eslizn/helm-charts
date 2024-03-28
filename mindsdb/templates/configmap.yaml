@@ -8,7 +8,7 @@ data:
   config.json: |
     {
       "config_version": "1.4",
-      "storage_dir": "/root/mdb_storage",
+      "storage_dir": "/storage",
       "debug": false,
       "integrations": {},
       "api": {

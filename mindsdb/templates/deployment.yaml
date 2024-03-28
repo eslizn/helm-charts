@@ -43,11 +43,16 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           {{- if .Values.persistent.enabled }}
+          env:
+            - name: MINDSDB_STORAGE_DIR
+              value: "/storage"
+            - name: MINDSDB_CONFIG_FILE
+              value: "/etc/mindsdb.json"
           volumeMounts:
             - name: {{ include "mindsdb.fullname" . }}
-              mountPath: "/root/mdb_storage"
+              mountPath: "/storage"
             - name: {{ include "mindsdb.fullname" . }}-config
-              mountPath: "/root/mindsdb_config.json"
+              mountPath: "/etc/mindsdb.json"
           {{- end }}
           ports:
             - name: http

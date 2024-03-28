@@ -23,9 +23,9 @@ spec:
   {{- if .Values.service.mongodb.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.service.mongodb.externalTrafficPolicy }}
   {{- end }}
-  {{- if and .Values.service.mongodb.clusterIP (eq .Values.service.mongodb.type "ClusterIP") }}
-  clusterIP: {{ .Values.service.mongodb.clusterIP }}
-  {{- end }}
+{{/*  {{- if and .Values.service.mongodb.clusterIP (eq .Values.service.mongodb.type "ClusterIP") }}*/}}
+{{/*  clusterIP: {{ .Values.service.mongodb.clusterIP }}*/}}
+{{/*  {{- end }}*/}}
   ports:
   - name: http
     port: {{ .Values.service.mongodb.port }}

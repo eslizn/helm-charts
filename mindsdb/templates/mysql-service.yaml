@@ -23,9 +23,9 @@ spec:
   {{- if .Values.service.mysql.externalTrafficPolicy }}
   externalTrafficPolicy: {{ .Values.service.mysql.externalTrafficPolicy }}
   {{- end }}
-  {{- if and .Values.service.mysql.clusterIP (eq .Values.service.mysql.type "ClusterIP") }}
-  clusterIP: {{ .Values.service.mysql.clusterIP }}
-  {{- end }}
+{{/*  {{- if and .Values.service.mysql.clusterIP (eq .Values.service.mysql.type "ClusterIP") }}*/}}
+{{/*  clusterIP: {{ .Values.service.mysql.clusterIP }}*/}}
+{{/*  {{- end }}*/}}
   ports:
   - name: http
     port: {{ .Values.service.mysql.port }}

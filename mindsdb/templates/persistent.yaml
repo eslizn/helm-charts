@@ -1,0 +1,14 @@
+{{- if .Values.persistent.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "mindsdb.fullname" . }}
+  labels:
+    {{- include "mindsdb.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.persistent.size }}
+{{- end }}

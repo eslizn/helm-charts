@@ -112,3 +112,8 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+persistent:
+  enabled: false
+  className:
+  size: 50Gi

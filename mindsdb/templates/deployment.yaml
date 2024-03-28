@@ -32,6 +32,9 @@ spec:
         - name: {{ include "mindsdb.fullname" . }}
           persistentVolumeClaim:
             claimName: {{ include "mindsdb.fullname" . }}
+        - name: {{ include "mindsdb.fullname" . }}-config
+          configMap:
+            name: {{ include "mindsdb.fullname" . }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -42,7 +45,9 @@ spec:
           {{- if .Values.persistent.enabled }}
           volumeMounts:
             - name: {{ include "mindsdb.fullname" . }}
-              mountPath: "/root"
+              mountPath: "/root/mdb_storage"
+            - name: {{ include "mindsdb.fullname" . }}-config
+              mountPath: "/root/mindsdb_config.json"
           {{- end }}
           ports:
             - name: http

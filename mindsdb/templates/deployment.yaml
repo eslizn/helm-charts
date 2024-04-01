@@ -51,6 +51,12 @@ spec:
               value: "/storage"
             - name: MINDSDB_CONFIG_FILE
               value: "/etc/mindsdb.json"
+            {{- if eq .Values.runtimeClass "nvidia" }}
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: all
+            {{- end }}
           volumeMounts:
             - name: {{ include "mindsdb.fullname" . }}
               mountPath: "/storage"

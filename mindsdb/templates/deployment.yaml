@@ -20,6 +20,9 @@ spec:
       labels:
         {{- include "mindsdb.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.runtimeClass }}
+      runtimeClassName: {{ .Values.runtimeClass }}
+      {{- end}}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

@@ -40,6 +40,7 @@ service:
   type: ClusterIP
   loadBalancerIP: ""
   port: 8388
+  nodePort: 8388
   annotations: {}
   # If the service is a LoadBalancer, since we cannot create one with mix protocols,
   # a seperate UDP-dedicated LoadBalancer will be created if enabled.

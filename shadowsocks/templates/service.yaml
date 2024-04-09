@@ -20,11 +20,17 @@ spec:
       targetPort: ss-tcp
       protocol: TCP
       name: ss-tcp
+      {{- if eq .Values.service.type "NodePort" }}
+        nodePort: {{ .Values.service.nodePort }}
+      {{- end}}
     {{- if not (contains "LoadBalancer" .Values.service.type) }}
     - port: {{ .Values.service.port }}
       targetPort: ss-udp
       protocol: UDP
       name: ss-udp
+      {{- if eq .Values.service.type "NodePort" }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end}}
     {{- if and .Values.kcptun.enabled .Values.kcptun.port }}
     - port: {{ .Values.kcptun.port }}
       targetPort: kcptun

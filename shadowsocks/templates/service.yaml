@@ -21,7 +21,7 @@ spec:
       protocol: TCP
       name: ss-tcp
       {{- if eq .Values.service.type "NodePort" }}
-        nodePort: {{ .Values.service.nodePort }}
+      nodePort: {{ .Values.service.nodePort }}
       {{- end}}
     {{- if not (contains "LoadBalancer" .Values.service.type) }}
     - port: {{ .Values.service.port }}

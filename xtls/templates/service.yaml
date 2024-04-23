@@ -13,6 +13,7 @@ spec:
       name: {{ include "xtls.fullname" . }}
   selector:
     {{- include "xtls.selectorLabels" . | nindent 4 }}
+{{- if .Values.ingress.traefik }}
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRouteTCP
@@ -37,3 +38,4 @@ spec:
     {{- end }}
   tls:
     passthrough: true
+{{- end }}

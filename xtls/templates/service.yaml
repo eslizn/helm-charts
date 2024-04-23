@@ -10,7 +10,7 @@ spec:
     - port: 443
       targetPort: https
       protocol: TCP
-      name: https
+      name: {{ include "xtls.fullname" . }}
   selector:
     {{- include "xtls.selectorLabels" . | nindent 4 }}
 ---
@@ -24,11 +24,16 @@ spec:
   entryPoints:
     {{- toYaml .Values.ingress.entryPoints | nindent 4 }}
   routes:
-    - match: HostSNI(`{{ .Values.ingress.sni }}`)
+    {{- $root := . }}
+    {{- range .Values.options.inbounds }}
+    {{- range .streamSettings.realitySettings.serverNames }}
+    - match: HostSNI(`{{ . }}`)
       services:
-        - name: {{ include "xtls.fullname" . }}
-          port: {{ .Values.ingress.port }}
+        - name: {{ include "xtls.fullname" $root }}
+          port: 443
           proxyProtocol:
             version: 2
+    {{- end }}
+    {{- end }}
   tls:
     passthrough: true

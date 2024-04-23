@@ -124,6 +124,16 @@ entries:
     version: 0.1.2
   xtls:
   - apiVersion: v2
+    appVersion: 1.8.9
+    created: "2024-04-23T03:49:59.899620437Z"
+    description: A Helm chart for Kubernetes
+    digest: db65540e94471612e6b3ad4d85c9bacf54096916acb8320ae323e0dde0b7d2e0
+    name: xtls
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.1/xtls-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
     appVersion: 1.16.0
     created: "2024-03-13T02:13:07.425607026Z"
     description: A Helm chart for Kubernetes
@@ -133,4 +143,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2024-04-09T09:46:45.926610863Z"
+generated: "2024-04-23T03:49:59.899658759Z"

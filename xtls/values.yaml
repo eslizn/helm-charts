@@ -10,7 +10,8 @@ service:
   port: 8443
 
 ingress:
-  entryPoints: webs
+  entryPoints:
+    - websecure
   traefik: true
 
 options:

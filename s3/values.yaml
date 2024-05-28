@@ -1,0 +1,69 @@
+# Default values for s3.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+registrar:
+  repository: quay.io/k8scsi/csi-node-driver-registrar
+  pullPolicy: IfNotPresent
+  tag: v1.2.0
+
+provisioner:
+  repository: quay.io/k8scsi/csi-provisioner
+  pullPolicy: IfNotPresent
+  tag: v2.1.0
+
+image:
+  repository: eslizn/csi-s3-provisioner
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+storageClass:
+  # Specifies whether the storage class should be created
+  create: true
+  # Name
+  name:
+  # Use a single bucket for all dynamically provisioned persistent volumes
+  singleBucket: ""
+  # mounter to use - either geesefs, s3fs or rclone (default geesefs)
+  mounter: geesefs
+  # GeeseFS mount options
+  mountOptions: "--memory-limit 1000 --dir-mode 0777 --file-mode 0666"
+  # Volume reclaim policy
+  reclaimPolicy: Delete
+  # Annotations for the storage class
+  # Example:
+  # annotations:
+  #   storageclass.kubernetes.io/is-default-class: "true"
+  annotations: {}
+  provisioner: s3
+
+secret:
+  # Specifies whether the secret should be created
+  create: true
+  # Name of the secret
+  name: s3
+  # S3 Access Key
+  accessKey: ""
+  # S3 Secret Key
+  secretKey: ""
+  # Endpoint
+  endpoint: https://storage.yandexcloud.net
+  # Region
+  region: ""
+
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""

@@ -1,0 +1,38 @@
+apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: {{ .Values.storageClass.provisioner }}
+spec:
+  attachRequired: false
+  podInfoOnMount: true
+  fsGroupPolicy: File # added in Kubernetes 1.19, this field is GA as of Kubernetes 1.23
+  volumeLifecycleModes: # added in Kubernetes 1.16, this field is beta
+    - Persistent
+---
+{{- if .Values.storageClass.create -}}
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: {{ .Values.storageClass.name }}
+{{- if .Values.storageClass.annotations }}
+  annotations:
+{{ toYaml .Values.storageClass.annotations | indent 4 }}
+{{- end }}
+provisioner: {{ .Values.storageClass.provisioner }}
+parameters:
+  mounter: {{ .Values.storageClass.mounter }}
+  options: {{ .Values.storageClass.mountOptions }}
+{{- if .Values.storageClass.singleBucket }}
+  bucket: {{ .Values.storageClass.singleBucket }}
+{{- end }}
+  csi.storage.k8s.io/provisioner-secret-name: {{ .Values.secret.name }}
+  csi.storage.k8s.io/provisioner-secret-namespace: {{ .Release.Namespace }}
+  csi.storage.k8s.io/controller-publish-secret-name: {{ .Values.secret.name }}
+  csi.storage.k8s.io/controller-publish-secret-namespace: {{ .Release.Namespace }}
+  csi.storage.k8s.io/node-stage-secret-name: {{ .Values.secret.name }}
+  csi.storage.k8s.io/node-stage-secret-namespace: {{ .Release.Namespace }}
+  csi.storage.k8s.io/node-publish-secret-name: {{ .Values.secret.name }}
+  csi.storage.k8s.io/node-publish-secret-namespace: {{ .Release.Namespace }}
+reclaimPolicy: {{ .Values.storageClass.reclaimPolicy }}
+{{- end -}}

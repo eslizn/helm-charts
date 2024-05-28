@@ -101,6 +101,17 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/mindsdb-0.1.0/mindsdb-0.1.0.tgz
     version: 0.1.0
+  s3:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2024-05-28T13:02:34.587050284Z"
+    description: A Helm chart for Kubernetes
+    digest: e720b5f5e794a95de13b5c1b15c6fe76bafa1b0cd1b7e1ed750008a860c33ac6
+    name: s3
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/s3-0.1.0/s3-0.1.0.tgz
+    version: 0.1.0
   shadowsocks:
   - apiVersion: v2
     appVersion: v3.3.5
@@ -163,4 +174,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2024-04-23T11:56:13.123111932Z"
+generated: "2024-05-28T13:02:34.587102621Z"

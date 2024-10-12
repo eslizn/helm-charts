@@ -1,5 +1,16 @@
 apiVersion: v1
 entries:
+  aktools:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2024-10-12T14:41:02.554947744Z"
+    description: A Helm chart for Kubernetes
+    digest: 3eab2b07687877f557f23fc215db276f1735fa5e6b2de66e89b221eb96fd0d2a
+    name: aktools
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/aktools-0.1.0/aktools-0.1.0.tgz
+    version: 0.1.0
   mindsdb:
   - apiVersion: v2
     appVersion: 1.16.0
@@ -174,4 +185,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2024-05-28T13:02:34.587102621Z"
+generated: "2024-10-12T14:41:02.554984202Z"

@@ -14,6 +14,16 @@ entries:
   mindsdb:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2025-04-18T19:16:49.201546013Z"
+    description: A Helm chart for Kubernetes
+    digest: de6a78f76b088134cbf5a84b5f7b957908b6bbdcf10bb157017a8ea51493aac6
+    name: mindsdb
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/mindsdb-0.1.11/mindsdb-0.1.11.tgz
+    version: 0.1.11
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2025-04-18T18:57:12.587615806Z"
     description: A Helm chart for Kubernetes
     digest: ab35235ad1511e8a7f1fb0e198a0a54a77ec1171e28e0bf4e21f47d8d1944d64
@@ -195,4 +205,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2025-04-18T18:57:12.587683983Z"
+generated: "2025-04-18T19:16:49.201605945Z"

@@ -49,9 +49,9 @@ spec:
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ $fullName }}
+                name: {{ include "mindsdb.fullname" . }}-http
                 port:
-                  number: {{ $svcPort }}
+                  number: {{ .Values.service.http.port }}
               {{- else }}
               serviceName: {{ $fullName }}
               servicePort: {{ $svcPort }}

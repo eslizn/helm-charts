@@ -13,6 +13,16 @@ entries:
     version: 0.1.0
   influxdb:
   - apiVersion: v2
+    appVersion: v3.3.0
+    created: "2025-08-21T14:35:49.453767275Z"
+    description: A Helm chart for Kubernetes
+    digest: 1c6da8a0099dd3743ad9b1d9d158d0a0c0b7ecefe6c61eb9dc0661af747987cf
+    name: influxdb
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/influxdb-1.0.0/influxdb-1.0.0.tgz
+    version: 1.0.0
+  - apiVersion: v2
     appVersion: v3.3.5
     created: "2025-08-21T11:53:00.620736617Z"
     description: A Helm chart for Kubernetes
@@ -24,6 +34,16 @@ entries:
     version: 0.1.3
   influxdb-explorer:
   - apiVersion: v2
+    appVersion: v3.3.0
+    created: "2025-08-21T14:35:49.618883747Z"
+    description: A Helm chart for Kubernetes
+    digest: ceb3392dd4ecb70126e1cc9ed9e38637037aa03871a84fcf351f63f67add2d21
+    name: influxdb-explorer
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/influxdb-explorer-1.0.0/influxdb-explorer-1.0.0.tgz
+    version: 1.0.0
+  - apiVersion: v2
     appVersion: v3.3.5
     created: "2025-08-21T11:53:00.768002942Z"
     description: A Helm chart for Kubernetes
@@ -34,6 +54,16 @@ entries:
     - https://github.com/eslizn/helm-charts/releases/download/influxdb-explorer-0.1.3/influxdb-explorer-0.1.3.tgz
     version: 0.1.3
   mindsdb:
+  - apiVersion: v2
+    appVersion: 25.8.2
+    created: "2025-08-21T14:35:49.773307959Z"
+    description: A Helm chart for Kubernetes
+    digest: ace5b19b3662c8f7bce2126b2d3364161e3abee38d22bf91a532e742b36b9be2
+    name: mindsdb
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/mindsdb-1.0.0/mindsdb-1.0.0.tgz
+    version: 1.0.0
   - apiVersion: v2
     appVersion: 1.16.0
     created: "2025-04-18T19:33:29.590629264Z"
@@ -186,6 +216,16 @@ entries:
     version: 0.1.0
   s3:
   - apiVersion: v2
+    appVersion: 0.43.2
+    created: "2025-08-21T14:35:49.930329181Z"
+    description: A Helm chart for Kubernetes
+    digest: 12bd16e3a86c9f508820486d0fdfdcd04a6a4495af9dc52d01d7af01b1551f71
+    name: s3
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/s3-1.0.0/s3-1.0.0.tgz
+    version: 1.0.0
+  - apiVersion: v2
     appVersion: 1.16.0
     created: "2024-05-28T13:02:34.587050284Z"
     description: A Helm chart for Kubernetes
@@ -196,6 +236,16 @@ entries:
     - https://github.com/eslizn/helm-charts/releases/download/s3-0.1.0/s3-0.1.0.tgz
     version: 0.1.0
   shadowsocks:
+  - apiVersion: v2
+    appVersion: v3.3.5
+    created: "2025-08-21T14:35:50.116094567Z"
+    description: A Helm chart for Kubernetes
+    digest: 3af46352bba3fd8b5c11acc931b39fada2a8b0e5be063356bcadf43550cc5760
+    name: shadowsocks
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/shadowsocks-1.0.0/shadowsocks-1.0.0.tgz
+    version: 1.0.0
   - apiVersion: v2
     appVersion: v3.3.5
     created: "2024-04-09T09:46:45.926563144Z"
@@ -217,6 +267,16 @@ entries:
     - https://github.com/eslizn/helm-charts/releases/download/shadowsocks-0.1.2/shadowsocks-0.1.2.tgz
     version: 0.1.2
   xtls:
+  - apiVersion: v2
+    appVersion: 1.8.9
+    created: "2025-08-21T14:35:50.240392304Z"
+    description: A Helm chart for Kubernetes
+    digest: f4043613d4783288828002616acb1c7943a1dd60f79181689c3cfc83f3e1e9ca
+    name: xtls
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/xtls-1.0.0/xtls-1.0.0.tgz
+    version: 1.0.0
   - apiVersion: v2
     appVersion: 1.8.9
     created: "2024-04-23T11:56:13.123053252Z"
@@ -257,4 +317,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2025-08-21T11:53:00.768065329Z"
+generated: "2025-08-21T14:35:50.240585995Z"

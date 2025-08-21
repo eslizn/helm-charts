@@ -11,6 +11,28 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/aktools-0.1.0/aktools-0.1.0.tgz
     version: 0.1.0
+  influxdb:
+  - apiVersion: v2
+    appVersion: v3.3.5
+    created: "2025-08-21T11:53:00.620736617Z"
+    description: A Helm chart for Kubernetes
+    digest: 2579f6d003208711582f7d38db49948fb17998ee2d566d462232b31be9567c84
+    name: influxdb
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/influxdb-0.1.3/influxdb-0.1.3.tgz
+    version: 0.1.3
+  influxdb-explorer:
+  - apiVersion: v2
+    appVersion: v3.3.5
+    created: "2025-08-21T11:53:00.768002942Z"
+    description: A Helm chart for Kubernetes
+    digest: d36e6346614ee3250284bd599392ef6d2205d3f1297d9ce3b5c4a1bf8a5561ac
+    name: influxdb-explorer
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/influxdb-explorer-0.1.3/influxdb-explorer-0.1.3.tgz
+    version: 0.1.3
   mindsdb:
   - apiVersion: v2
     appVersion: 1.16.0
@@ -235,4 +257,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2025-04-18T19:33:29.590766018Z"
+generated: "2025-08-21T11:53:00.768065329Z"

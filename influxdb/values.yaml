@@ -1,0 +1,40 @@
+replicaCount: 1
+
+image:
+  repository: influxdb
+  tag: 3-core
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8181
+
+ingress:
+  enabled: false
+  className: "traefik"
+  host: ""
+  path: /
+  annotations: {}
+  tls:
+    enabled: false
+    secretName: ""
+
+persistence:
+  enabled: false
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 20Gi
+  mountPath: /data
+
+resources:
+  limits:
+    cpu: 8
+    memory: 16G
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

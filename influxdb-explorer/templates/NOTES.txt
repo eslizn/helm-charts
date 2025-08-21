@@ -1,0 +1,18 @@
+1. Get the application URL by running these commands:
+  - Ingress Host: {{ .Values.ingress.host }}
+  - If you have a DNS or /etc/hosts entry pointing to your cluster ingress, open:
+    http://{{ .Values.ingress.host }}{{ .Values.ingress.path }}
+
+2. To override values during install:
+  helm install myweb ./myweb-chart \
+    --set image.repository=myrepo/myimage \
+    --set image.tag=v1.2.3 \
+    --set replicaCount=3 \
+    --set ingress.host=app.example.com \
+    --set ingress.className=nginx \
+    --set persistence.enabled=true \
+    --set persistence.size=5Gi \
+    --set resources.requests.cpu=200m \
+    --set resources.requests.memory=256Mi
+
+Or use a custom values.yaml file with `-f`.

@@ -4,7 +4,7 @@ kind: Ingress
 metadata:
   name: {{ include "influxdb-explorer.fullname" . }}-ingress
   labels:
-    {{ include "influxdb-explorer.labels" . | indent 4 }}
+    {{- include "influxdb-explorer.labels" . | nindent 4 }}
   annotations:
     {{- if .Values.ingress.annotations }}
     {{ toYaml .Values.ingress.annotations | nindent 4 }}

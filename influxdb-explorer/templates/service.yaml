@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ include "influxdb-explorer.fullname" . }}
   labels:
-    {{ include "influxdb-explorer.labels" . | indent 4 }}
+    {{- include "influxdb-explorer.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:

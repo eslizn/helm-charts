@@ -5,7 +5,7 @@ kind: Service
 metadata:
   name: {{ $fullname }}-headless
   labels:
-    {{ include "influxdb.labels" . | indent 4 }}
+    {{- include "influxdb.labels" . | nindent 4 }}
 spec:
   clusterIP: None
   selector:
@@ -20,7 +20,7 @@ kind: Service
 metadata:
   name: {{ $fullname }}
   labels:
-    {{ include "influxdb.labels" . | indent 4 }}
+    {{- include "influxdb.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   selector:

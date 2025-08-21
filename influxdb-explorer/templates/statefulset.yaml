@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "influxdb.fullname" . }}
+  name: {{ include "influxdb-explorer.fullname" . }}
   labels:
-    {{- include "influxdb.labels" . | nindent 4 }}
+    {{- include "influxdb-explorer.labels" . | nindent 4 }}
 spec:
-  serviceName: {{ include "influxdb.fullname" . }}-headless
+  serviceName: {{ include "influxdb-explorer.fullname" . }}-headless
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "influxdb.fullname" . }}
+      app: {{ include "influxdb-explorer.fullname" . }}
   template:
     metadata:
       labels:
-        app: {{ include "influxdb.fullname" . }}
+        app: {{ include "influxdb-explorer.fullname" . }}
     spec:
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -31,16 +31,8 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            - influxdb3
           args:
-            - serve
-            - --node-id=${HOSTNAME}
-            {{- if .Values.persistence.enabled }}
-            - --object-store=file
-            - --data-dir={{ .Values.persistence.mountPath }}/influxdb
-            - --plugin-dir={{ .Values.persistence.mountPath }}/plugins
-            {{- end }}
+            - --mode=admin
           ports:
             - containerPort: {{ .Values.service.targetPort }}
           resources:
@@ -64,7 +56,7 @@ spec:
     - metadata:
         name: data
         labels:
-          {{- include "influxdb.labels" . | nindent 10 }}
+          {{- include "influxdb-explorer.labels" . | nindent 10 }}
       spec:
         accessModes:
           - {{ .Values.persistence.accessMode }}

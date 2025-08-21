@@ -4,11 +4,11 @@ kind: Ingress
 metadata:
   name: {{ include "influxdb.fullname" . }}-ingress
   labels:
-    {{ include "influxdb.labels" . | indent 4 }}
+    {{- include "influxdb.labels" . | nindent 4 }}
   annotations:
-    {{- if .Values.ingress.annotations }}
-    {{ toYaml .Values.ingress.annotations | nindent 4 }}
-    {{- end }}
+{{- if .Values.ingress.annotations }}
+{{ toYaml .Values.ingress.annotations | nindent 4 }}
+{{- end }}
 spec:
   {{- if .Values.ingress.className }}
   ingressClassName: {{ .Values.ingress.className }}

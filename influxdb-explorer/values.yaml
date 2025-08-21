@@ -25,7 +25,7 @@ persistence:
   storageClass: ""
   accessMode: ReadWriteOnce
   size: 1Gi
-  mountPath: /data
+  mountPath: /db
 
 resources:
   limits:

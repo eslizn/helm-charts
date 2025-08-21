@@ -30,7 +30,7 @@ spec:
           {{- if .Values.persistence.enabled }}
           volumeMounts:
             - name: data
-              mountPath: /data
+              mountPath: .Values.persistence.mountPath
           {{- end }}
       {{- if .Values.persistence.enabled }}
       volumes:

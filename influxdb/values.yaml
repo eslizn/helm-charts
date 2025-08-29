@@ -30,7 +30,7 @@ persistence:
 resources:
   limits:
     cpu: 8
-    memory: 16G
+    memory: 16Gi
   requests:
     cpu: 100m
     memory: 128Mi

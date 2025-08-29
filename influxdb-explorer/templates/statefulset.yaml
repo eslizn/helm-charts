@@ -41,14 +41,20 @@ spec:
           volumeMounts:
             - name: data
               mountPath: {{ .Values.persistence.mountPath }}
+            - name: config
+              mountPath: /app-root/config
           {{- else }}
           volumeMounts:
             - name: ephemeral-data
               mountPath: {{ .Values.persistence.mountPath }}
+            - name: ephemeral-config
+              mountPath: /app-root/config
           {{- end }}
       {{- if not .Values.persistence.enabled }}
       volumes:
         - name: ephemeral-data
+          emptyDir: {}
+        - name: ephemeral-config
           emptyDir: {}
       {{- end }}
   {{- if .Values.persistence.enabled }}
@@ -63,6 +69,19 @@ spec:
         resources:
           requests:
             storage: {{ .Values.persistence.size }}
+      {{- if .Values.persistence.storageClass }}
+        storageClassName: "{{ .Values.persistence.storageClass }}"
+      {{- end }}
+    - metadata:
+        name: config
+        labels:
+          {{- include "influxdb-explorer.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode }}
+        resources:
+          requests:
+            storage: 32Mi
       {{- if .Values.persistence.storageClass }}
         storageClassName: "{{ .Values.persistence.storageClass }}"
       {{- end }}

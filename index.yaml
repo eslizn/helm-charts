@@ -14,6 +14,16 @@ entries:
   influxdb:
   - apiVersion: v2
     appVersion: v3.3.0
+    created: "2025-08-29T15:49:12.359080372Z"
+    description: A Helm chart for Kubernetes
+    digest: 23b160f30fc4190260e16380db34aea025517c801530229910e97da841da1433
+    name: influxdb
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/influxdb-1.0.1/influxdb-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: v3.3.0
     created: "2025-08-21T14:35:49.453767275Z"
     description: A Helm chart for Kubernetes
     digest: 1c6da8a0099dd3743ad9b1d9d158d0a0c0b7ecefe6c61eb9dc0661af747987cf
@@ -327,4 +337,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2025-08-29T15:27:30.184024547Z"
+generated: "2025-08-29T15:49:12.359134052Z"

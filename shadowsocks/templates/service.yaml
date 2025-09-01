@@ -13,8 +13,8 @@ spec:
   {{- if and (eq .Values.service.type "LoadBalancer") .Values.service.loadBalancerIP }}
   loadBalancerIP: {{ .Values.service.loadBalancerIP }}
   {{- end }}
-  externalTrafficPolicy: Local
-  internalTrafficPolicy: Local
+  externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
+  internalTrafficPolicy: {{ .Values.service.internalTrafficPolicy }}
   ports:
     - port: {{ .Values.service.port }}
       targetPort: ss-tcp

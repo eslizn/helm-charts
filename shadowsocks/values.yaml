@@ -38,6 +38,8 @@ securityContext: {}
 
 service:
   type: ClusterIP
+  externalTrafficPolicy: Cluster
+  internalTrafficPolicy: Cluster
   loadBalancerIP: ""
   port: 8388
   nodePort: 8388

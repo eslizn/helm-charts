@@ -234,6 +234,17 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/mindsdb-0.1.0/mindsdb-0.1.0.tgz
     version: 0.1.0
+  octopus:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2026-01-27T04:51:32.834480426Z"
+    description: A Helm chart for Kubernetes
+    digest: 47e7d9a609646704a99fd2299b64039da79ff98c31d5b532acf69134ae48b7e9
+    name: octopus
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/octopus-0.0.1/octopus-0.0.1.tgz
+    version: 0.0.1
   s3:
   - apiVersion: v2
     appVersion: 0.43.2
@@ -367,4 +378,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-01-26T03:25:04.147003913Z"
+generated: "2026-01-27T04:51:32.834551037Z"

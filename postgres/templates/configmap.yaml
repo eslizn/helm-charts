@@ -1,0 +1,11 @@
+{{- if .Values.config.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "postgres.fullname" . }}-config
+  labels:
+    {{- include "postgres.labels" . | nindent 4 }}
+data:
+  POSTGRES_DB: {{ .Values.config.database | quote }}
+  POSTGRES_USER: {{ .Values.config.username | quote }}
+{{- end }}

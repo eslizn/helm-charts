@@ -1,0 +1,31 @@
+PostgreSQL has been deployed!
+
+1. Connection Information:
+   - Host: {{ include "postgres.fullname" . }}
+   - Port: {{ .Values.service.port }}
+   - Database: {{ .Values.config.database }}
+   - Username: {{ .Values.config.username }}
+   - Password: {{ if .Values.config.password.generate }}(generated - see below){{ else }}{{ .Values.config.password }}{{ end }}
+
+2. Connect using psql client:
+   kubectl run postgres-client --rm -i --restart=Never --image=postgres:13-alpine -- \
+     psql -h {{ include "postgres.fullname" . }} -p {{ .Values.service.port }} -U {{ .Values.config.username }} -d {{ .Values.config.database }}
+
+3. Port forwarding for local access:
+   export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "postgres.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+   kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 5432:5432
+   
+   Then connect locally:
+   psql -h localhost -p 5432 -U {{ .Values.config.username }} -d {{ .Values.config.database }}
+
+4. Test the connection:
+   helm test {{ .Release.Name }}
+
+5. Get service details:
+   kubectl get svc {{ include "postgres.fullname" . }} -n {{ .Release.Namespace }}
+
+{{- if .Values.config.password.generate }}
+6. Generated Password:
+   To get the generated password, run:
+   kubectl get secret {{ include "postgres.fullname" . }}-password -n {{ .Release.Namespace }} -o jsonpath="{.data.postgres-password}" | base64 -d
+{{- end }}

@@ -1,0 +1,51 @@
+{{- if .Values.config.password.generate }}
+# Post-install hook to display PostgreSQL connection information
+# This job runs after installation to show the generated password and connection details
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "postgres.fullname" . }}-post-install
+  labels:
+    {{- include "postgres.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: {{ include "postgres.fullname" . }}-post-install
+      labels:
+        {{- include "postgres.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: post-install-notice
+        image: busybox:latest
+        command: ['sh', '-c']
+        args:
+          - |
+            echo "=================================================="
+            echo "PostgreSQL Installation Complete"
+            echo "=================================================="
+            echo "Database Name: {{ .Values.config.database }}"
+            echo "Username: {{ .Values.config.username }}"
+            echo "Password: $(cat /etc/postgres-password/postgres-password)"
+            echo "Service: {{ include "postgres.fullname" . }}"
+            echo "Port: {{ .Values.service.port }}"
+            echo ""
+            echo "Connection String:"
+            echo "postgresql://{{ .Values.config.username }}:$(cat /etc/postgres-password/postgres-password)@{{ include "postgres.fullname" . }}:{{ .Values.service.port }}/{{ .Values.config.database }}"
+            echo "=================================================="
+        volumeMounts:
+        - name: postgres-password
+          mountPath: /etc/postgres-password
+          readOnly: true
+      volumes:
+      - name: postgres-password
+        secret:
+          secretName: {{ include "postgres.fullname" . }}-password
+          items:
+          - key: postgres-password
+            path: postgres-password
+{{- end }}

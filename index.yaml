@@ -245,6 +245,17 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/octopus-0.0.1/octopus-0.0.1.tgz
     version: 0.0.1
+  openclaw:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2026-02-23T10:01:00.892718622Z"
+    description: A Helm chart for Kubernetes
+    digest: e3ee0c3cd0493713bfcb0fe8a2177bc528be77a4cc19dc76a0db64e032011231
+    name: openclaw
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/openclaw-0.1.0/openclaw-0.1.0.tgz
+    version: 0.1.0
   postgres:
   - apiVersion: v2
     appVersion: 1.16.0
@@ -389,4 +400,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-02-12T02:02:01.703758004Z"
+generated: "2026-02-23T10:01:00.892804692Z"

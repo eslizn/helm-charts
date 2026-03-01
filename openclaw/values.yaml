@@ -7,7 +7,7 @@ replicaCount: 1
 
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: docker.io/alpine/openclaw
+  repository: docker.io/eslizn/openclaw
   # This sets the pull policy for images.
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
@@ -121,7 +121,7 @@ persistence:
   # Size of the persistent volume
   size: 10Gi
   # Mount path for the data directory
-  mountPath: /home/node/.openclaw
+  mountPath: /root
   # Sub path for the data directory
   subPath: ""
 

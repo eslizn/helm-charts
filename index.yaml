@@ -258,6 +258,16 @@ entries:
   openclaw:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2026-03-01T02:41:04.011471147Z"
+    description: A Helm chart for Kubernetes
+    digest: e4562f85106383c7eba7c375660da13d7e6691bc50f76c67a4212cab811df011
+    name: openclaw
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/openclaw-0.1.1/openclaw-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2026-02-23T10:01:00.892718622Z"
     description: A Helm chart for Kubernetes
     digest: e3ee0c3cd0493713bfcb0fe8a2177bc528be77a4cc19dc76a0db64e032011231
@@ -410,4 +420,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-02-23T10:03:40.063856438Z"
+generated: "2026-03-01T02:41:04.011556436Z"

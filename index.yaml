@@ -237,6 +237,16 @@ entries:
   octopus:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2026-03-09T14:26:49.390100968Z"
+    description: A Helm chart for Kubernetes
+    digest: e04d693d21e35bc7c09969d1de2481731ab2141d3e29757291b7db5e87aee45e
+    name: octopus
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/octopus-0.0.3/octopus-0.0.3.tgz
+    version: 0.0.3
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2026-02-23T10:03:40.063764566Z"
     description: A Helm chart for Kubernetes
     digest: e7501792866dc6b94e50ca9290f16b2236732c05ef5d18184720077d221bc1de
@@ -420,4 +430,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-03-01T02:41:04.011556436Z"
+generated: "2026-03-09T14:26:49.390187459Z"

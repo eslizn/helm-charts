@@ -320,6 +320,16 @@ entries:
     version: 0.1.0
   shadowsocks:
   - apiVersion: v2
+    appVersion: v3.3.6
+    created: "2026-03-31T19:43:42.730050331Z"
+    description: A Helm chart for Kubernetes
+    digest: f21a99847f6517ee5b9e423fb7e9e1b82afce61e2ab3c2f2578297a6976b9325
+    name: shadowsocks
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/shadowsocks-1.0.4/shadowsocks-1.0.4.tgz
+    version: 1.0.4
+  - apiVersion: v2
     appVersion: v3.3.5
     created: "2026-01-26T03:25:04.146924354Z"
     description: A Helm chart for Kubernetes
@@ -430,4 +440,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-03-09T14:26:49.390187459Z"
+generated: "2026-03-31T19:43:42.730133356Z"

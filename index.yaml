@@ -399,6 +399,17 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/shadowsocks-0.1.2/shadowsocks-0.1.2.tgz
     version: 0.1.2
+  shadowsocks-rust:
+  - apiVersion: v2
+    appVersion: 1.24.0
+    created: "2026-04-01T13:07:14.65260118Z"
+    description: A Helm chart for shadowsocks-rust
+    digest: 566cdab43f0e7612a3a4b2747105bb15f251aef395b562caac2221c8fd5b6559
+    name: shadowsocks-rust
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/shadowsocks-rust-0.1.0/shadowsocks-rust-0.1.0.tgz
+    version: 0.1.0
   xtls:
   - apiVersion: v2
     appVersion: 1.8.9
@@ -450,4 +461,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-03-31T19:51:46.337790156Z"
+generated: "2026-04-01T13:07:14.652675655Z"

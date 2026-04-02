@@ -12,9 +12,13 @@ spec:
   type: {{ .Values.service.type }}
   ports:
   {{- range $i, $svr := .Values.servers }}
-  - name: {{ include "shadowsocks-rust.portName" $svr }}
+  - name: {{ include "shadowsocks-rust.portName" $svr }}-tcp
     targetPort: {{ $svr.server_port }}
     protocol: TCP
+    port: {{ default $svr.server_port $svr.service_port }}
+  - name: {{ include "shadowsocks-rust.portName" $svr }}-udp
+    targetPort: {{ $svr.server_port }}
+    protocol: UDP
     port: {{ default $svr.server_port $svr.service_port }}
   {{ end -}}
   selector:

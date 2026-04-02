@@ -12,10 +12,18 @@ spec:
   type: {{ .Values.service.type }}
   ports:
   {{- range $i, $svr := .Values.servers }}
-  - name: {{ include "shadowsocks-rust.portName" $svr }}
+  {{- if ne (default "tcp_only" $svr.mode) "udp_only" }}
+  - name: {{ include "shadowsocks-rust.portName" $svr }}-tcp
     targetPort: {{ $svr.server_port }}
     protocol: TCP
     port: {{ default $svr.server_port $svr.service_port }}
-  {{ end -}}
+  {{- end }}
+  {{- if ne (default "tcp_only" $svr.mode) "tcp_only" }}
+  - name: {{ include "shadowsocks-rust.portName" $svr }}-udp
+    targetPort: {{ $svr.server_port }}
+    protocol: UDP
+    port: {{ default $svr.server_port $svr.service_port }}
+  {{- end }}
+  {{- end }}
   selector:
     {{- include "shadowsocks-rust.selectorLabels" . | nindent 4 }}

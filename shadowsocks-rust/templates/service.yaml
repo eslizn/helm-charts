@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "shadowsocks-rust.fullname" . }}
+  name: {{ include "shadowsocks-rust.fullname" . }}-tcp
   labels:
     {{- include "shadowsocks-rust.labels" . | nindent 4 }}
   annotations:
@@ -12,11 +12,29 @@ spec:
   type: {{ .Values.service.type }}
   ports:
   {{- range $i, $svr := .Values.servers }}
-  - name: {{ include "shadowsocks-rust.portName" $svr }}-tcp
+  - name: {{ include "shadowsocks-rust.portName" $svr }}
     targetPort: {{ $svr.server_port }}
     protocol: TCP
     port: {{ default $svr.server_port $svr.service_port }}
-  - name: {{ include "shadowsocks-rust.portName" $svr }}-udp
+  {{ end -}}
+  selector:
+    {{- include "shadowsocks-rust.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "shadowsocks-rust.fullname" . }}-udp
+  labels:
+    {{- include "shadowsocks-rust.labels" . | nindent 4 }}
+  annotations:
+    {{- range $key, $value := .Values.service.annotations }}
+      {{ $key }}: {{ $value | quote }}
+    {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  {{- range $i, $svr := .Values.servers }}
+  - name: {{ include "shadowsocks-rust.portName" $svr }}
     targetPort: {{ $svr.server_port }}
     protocol: UDP
     port: {{ default $svr.server_port $svr.service_port }}

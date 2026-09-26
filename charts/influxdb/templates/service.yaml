@@ -1,32 +1,5 @@
-{{- $fullname := include "influxdb.fullname" . }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ $fullname }}-headless
-  labels:
-    {{- include "influxdb.labels" . | nindent 4 }}
-spec:
-  clusterIP: None
-  selector:
-    app: {{ $fullname }}
-  ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.targetPort }}
-      name: http
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ $fullname }}
-  labels:
-    {{- include "influxdb.labels" . | nindent 4 }}
-spec:
-  type: {{ .Values.service.type }}
-  selector:
-    app: {{ $fullname }}
-  ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.targetPort }}
-      protocol: TCP
-      name: http
+{{- $main := .Values.service.main -}}
+{{- $headless := .Values.service.headless -}}
+{{- $services := dict "main" (dict "type" $main.type "port" $main.port "targetPort" $main.targetPort "portName" $main.portName) -}}
+{{- $_ := set $services "headless" (dict "headless" true "port" $headless.port "targetPort" $headless.targetPort "portName" $headless.portName) -}}
+{{- include "common.service" (dict "ctx" $ "services" $services) }}

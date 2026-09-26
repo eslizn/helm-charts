@@ -1,29 +1,13 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "shadowsocks-rust.fullname" . }}
-  labels:
-    {{- include "shadowsocks-rust.labels" . | nindent 4 }}
-  annotations:
-    {{- range $key, $value := .Values.service.annotations }}
-      {{ $key }}: {{ $value | quote }}
-    {{- end }}
-spec:
-  type: {{ .Values.service.type }}
-  ports:
-  {{- range $i, $svr := .Values.servers }}
-  {{- if ne (default "tcp_only" $svr.mode) "udp_only" }}
-  - name: {{ include "shadowsocks-rust.portName" $svr }}-tcp
-    targetPort: {{ $svr.server_port }}
-    protocol: TCP
-    port: {{ default $svr.server_port $svr.service_port }}
-  {{- end }}
-  {{- if ne (default "tcp_only" $svr.mode) "tcp_only" }}
-  - name: {{ include "shadowsocks-rust.portName" $svr }}-udp
-    targetPort: {{ $svr.server_port }}
-    protocol: UDP
-    port: {{ default $svr.server_port $svr.service_port }}
-  {{- end }}
-  {{- end }}
-  selector:
-    {{- include "shadowsocks-rust.selectorLabels" . | nindent 4 }}
+{{- $ports := list -}}
+{{- range .Values.servers -}}
+{{- $name := include "shadowsocks-rust.portName" . -}}
+{{- $port := default .server_port .service_port -}}
+{{- if ne (default "tcp_only" .mode) "udp_only" -}}
+{{- $ports = append $ports (dict "name" (printf "%s-tcp" $name) "port" $port "targetPort" .server_port "protocol" "TCP") -}}
+{{- end -}}
+{{- if ne (default "tcp_only" .mode) "tcp_only" -}}
+{{- $ports = append $ports (dict "name" (printf "%s-udp" $name) "port" $port "targetPort" .server_port "protocol" "UDP") -}}
+{{- end -}}
+{{- end -}}
+{{- $main := .Values.service.main -}}
+{{- include "common.service" (dict "ctx" $ "services" (dict "main" (dict "type" $main.type "annotations" $main.annotations "ports" $ports))) }}

@@ -1,9 +1,10 @@
 # Default values for shadowsocks-rust.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# The schema is shared by every chart in this repository: see
+# ../common/templates/_helpers.tpl and the repository README.
 
 # This is the shadowsocks config which will be mount to /etc/shadowocks-rust.
 # You can put arbitrary yaml here, and it will be translated to json before mounting.
+# Container ports, probes and Service ports are all derived from this list.
 servers:
 - server: "::"
   server_port: 8388
@@ -18,59 +19,47 @@ servers:
 # Whether to download v2ray and xray plugin.
 downloadPlugins: false
 
-# Name of the ConfigMap with config.json configuration for shadowsocks-rust.
+# Name of an existing ConfigMap with the config.json for shadowsocks-rust.
+# Leave empty to let the chart render the ConfigMap from .Values.servers.
 configMapName: ""
 
-service:
-  # Change to LoadBalancer if you are behind a cloud provider like aws, gce, or tke.
-  type: ClusterIP
-  # external-dns.alpha.kubernetes.io/hostname: socks.example.com
-  annotations: {}
-
-# Bind shadowsocks port port to host, i.e., we can use host:port to access shawdowsocks server.
+# Bind the shadowsocks port to the host, i.e. reach the server through host:port.
 hostPort: false
 
 replicaCount: 1
 
 image:
   repository: ghcr.io/shadowsocks/ssserver-rust
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
+  pullPolicy: IfNotPresent
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
 serviceAccount:
-  # Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+  automount: true
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
   name: ""
 
 podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
 
-podSecurityContext:
-  {}
-  # fsGroup: 2000
+# Container level configuration. ports and probes are derived from .Values.servers.
+workload:
+  kind: Deployment
 
-securityContext:
-  {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+# Named services: "main" is rendered as <fullname>, other keys as <fullname>-<key>.
+# Ports are derived from .Values.servers, so they are not listed here.
+service:
+  main:
+    type: ClusterIP
+    annotations: {}
 
 resources:
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   limits:
     cpu: 100m
     memory: 128Mi
@@ -83,10 +72,7 @@ autoscaling:
   minReplicas: 1
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
 
 nodeSelector: {}
-
 tolerations: []
-
 affinity: {}

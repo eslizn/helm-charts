@@ -1,19 +1,54 @@
+# Default values for xtls.
+# The schema is shared by every chart in this repository: see
+# ../common/templates/_helpers.tpl and the repository README.
+
 replicaCount: 1
 
 image:
   repository: ghcr.io/xtls/xray-core
+  tag: "latest"
   pullPolicy: Always
-  tag: latest
 
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+securityContext: {}
+
+# Container level configuration.
+workload:
+  kind: Deployment
+  ports:
+    - name: https
+      containerPort: 443
+      protocol: TCP
+
+# Named services: "main" is rendered as <fullname>, other keys as <fullname>-<key>.
+# targetPort refers to the container port name from workload.ports.
 service:
-  type: NodePort
-  port: 8443
+  main:
+    type: ClusterIP
+    port: 443
+    targetPort: https
 
+# Traefik IngressRouteTCP (traefik.io/v1alpha1) for the REALITY inbound: one
+# HostSNI rule per serverName found in options.inbounds, TLS passthrough.
 ingress:
+  traefik: true
   entryPoints:
     - websecure
-  traefik: true
 
+# Xray-core configuration, rendered verbatim as the config.json of the ConfigMap
+# mounted at /etc/xray/. See https://xtls.github.io/config/ for the schema.
 options:
   log:
     loglevel: warning
@@ -47,15 +82,19 @@ options:
     - protocol: blackhole
 
 resources:
-   limits:
-     cpu: 100m
-     memory: 128Mi
-   requests:
-     cpu: 100m
-     memory: 128Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
 
 nodeSelector: {}
-
 tolerations: []
-
 affinity: {}

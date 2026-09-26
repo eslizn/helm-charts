@@ -1,0 +1,41 @@
+{{- $explorer := .Values.explorer -}}
+{{- if $explorer.enabled -}}
+{{- $name := printf "%s-explorer" (include "common.fullname" .) -}}
+{{- $svc := $explorer.service -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}-headless
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+    app.kubernetes.io/component: explorer
+spec:
+  clusterIP: None
+  selector:
+    {{- include "common.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: explorer
+  ports:
+    - name: http
+      port: {{ $svc.port }}
+      targetPort: {{ $svc.targetPort }}
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+    app.kubernetes.io/component: explorer
+spec:
+  type: {{ $svc.type }}
+  selector:
+    {{- include "common.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: explorer
+  ports:
+    - name: http
+      port: {{ $svc.port }}
+      targetPort: {{ $svc.targetPort }}
+      protocol: TCP
+{{- end }}

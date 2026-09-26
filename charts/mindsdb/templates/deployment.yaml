@@ -1,89 +1,15 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{ include "mindsdb.fullname" . }}
-  labels:
-    {{- include "mindsdb.labels" . | nindent 4 }}
-spec:
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
-  selector:
-    matchLabels:
-      {{- include "mindsdb.selectorLabels" . | nindent 6 }}
-  template:
-    metadata:
-      {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      labels:
-        {{- include "mindsdb.selectorLabels" . | nindent 8 }}
-    spec:
-      {{- if .Values.runtimeClass }}
-      runtimeClassName: {{ .Values.runtimeClass }}
-      {{- end}}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "mindsdb.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- if .Values.persistent.enabled }}
-      volumes:
-        - name: {{ include "mindsdb.fullname" . }}
-          persistentVolumeClaim:
-            claimName: {{ include "mindsdb.fullname" . }}
-        - name: {{ include "mindsdb.fullname" . }}-config
-          configMap:
-            name: {{ include "mindsdb.fullname" . }}
-      {{- end }}
-      containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if .Values.persistent.enabled }}
-          env:
-            - name: MINDSDB_STORAGE_DIR
-              value: "/storage"
-            - name: MINDSDB_CONFIG_FILE
-              value: "/etc/mindsdb.json"
-            {{- if eq .Values.runtimeClass "nvidia" }}
-            - name: NVIDIA_VISIBLE_DEVICES
-              value: all
-            - name: NVIDIA_DRIVER_CAPABILITIES
-              value: all
-            {{- end }}
-          volumeMounts:
-            - name: {{ include "mindsdb.fullname" . }}
-              mountPath: "/storage"
-            - name: {{ include "mindsdb.fullname" . }}-config
-              mountPath: "/etc/mindsdb.json"
-          {{- end }}
-          ports:
-            - name: http
-              containerPort: {{ .Values.service.http.port }}
-              protocol: TCP
-            - name: mysql
-              containerPort: {{ .Values.service.mysql.port }}
-              protocol: TCP
-            - name: mongodb
-              containerPort: {{ .Values.service.mongodb.port }}
-              protocol: TCP
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+{{- $persistence := .Values.persistence -}}
+{{- $env := list -}}
+{{- $volumes := list -}}
+{{- $volumeMounts := list -}}
+{{- if $persistence.enabled -}}
+{{- $env = append $env (dict "name" "MINDSDB_STORAGE_DIR" "value" $persistence.mountPath) -}}
+{{- $env = append $env (dict "name" "MINDSDB_CONFIG_FILE" "value" $persistence.configMountPath) -}}
+{{- if eq .Values.runtimeClass "nvidia" -}}
+{{- $env = append $env (dict "name" "NVIDIA_VISIBLE_DEVICES" "value" "all") -}}
+{{- $env = append $env (dict "name" "NVIDIA_DRIVER_CAPABILITIES" "value" "all") -}}
+{{- end -}}
+{{- $volumes = list (dict "name" "config" "configMap" (dict "name" (include "common.fullname" .))) -}}
+{{- $volumeMounts = list (dict "name" "config" "mountPath" $persistence.configMountPath) -}}
+{{- end -}}
+{{- include "common.deployment" (dict "ctx" $ "env" $env "volumes" $volumes "volumeMounts" $volumeMounts "runtimeClassName" .Values.runtimeClass) }}

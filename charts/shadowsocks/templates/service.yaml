@@ -1,74 +1,36 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "shadowsocks.fullname" . }}
-  labels:
-    {{- include "shadowsocks.labels" . | nindent 4 }}
-  {{- with .Values.service.annotations }}
-  annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
-spec:
-  type: {{ .Values.service.type }}
-{{/*  {{- if and (eq .Values.service.type "LoadBalancer") .Values.service.loadBalancerIP }}*/}}
-{{/*  loadBalancerIP: {{ .Values.service.loadBalancerIP }}*/}}
-{{/*  {{- end }}*/}}
-  externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
-  internalTrafficPolicy: {{ .Values.service.internalTrafficPolicy }}
-  ports:
-    - port: {{ .Values.service.port }}
-      targetPort: ss-tcp
-      protocol: TCP
-      name: ss-tcp
-      {{- if eq .Values.service.type "NodePort" }}
-      nodePort: {{ .Values.service.nodePort }}
-      {{- end}}
-    {{- if not (contains "LoadBalancer" .Values.service.type) }}
-    - port: {{ .Values.service.port }}
-      targetPort: ss-udp
-      protocol: UDP
-      name: ss-udp
-      {{- if eq .Values.service.type "NodePort" }}
-      nodePort: {{ .Values.service.nodePort }}
-      {{- end}}
-    {{- if and .Values.kcptun.enabled .Values.kcptun.port }}
-    - port: {{ .Values.kcptun.port }}
-      targetPort: kcptun
-      protocol: UDP
-      name: kcptun
-    {{- end }}
-    {{- end }}
-  selector:
-    {{- include "shadowsocks.selectorLabels" . | nindent 4 }}
----
-{{- if and .Values.service.udpLoadBalancer.enabled (contains "LoadBalancer" .Values.service.type) }}
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "shadowsocks.udpLoadBalancer.fullname" . }}
-  labels:
-    {{- include "shadowsocks.labels" . | nindent 4 }}
-  {{- if or .Values.service.annotations .Values.service.udpLoadBalancer.annotations }}
-  annotations:
-    {{- toYaml .Values.service.annotations | nindent 4 }}
-    {{- toYaml .Values.service.udpLoadBalancer.annotations | nindent 4 }}
-  {{- end }}
-spec:
-  type: {{ .Values.service.type }}
-  {{- if and (eq .Values.service.type "LoadBalancer") .Values.service.loadBalancerIP }}
-  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
-  {{- end }}
-  ports:
-    - port: {{ .Values.service.port }}
-      targetPort: ss-udp
-      protocol: UDP
-      name: ss-udp
-    {{- if and .Values.kcptun.enabled .Values.kcptun.port }}
-    - port: {{ .Values.kcptun.port }}
-      targetPort: kcptun
-      protocol: UDP
-      name: kcptun
-    {{- end }}
-  selector:
-    {{- include "shadowsocks.selectorLabels" . | nindent 4 }}
-{{- end }}
+{{- $main := .Values.service.main -}}
+{{- $kcptun := .Values.kcptun -}}
+{{- $isNodePort := eq $main.type "NodePort" -}}
+{{- $isLoadBalancer := contains "LoadBalancer" $main.type -}}
+{{- $hasKcptun := and $kcptun.enabled $kcptun.port -}}
+{{- /* A LoadBalancer cannot serve TCP and UDP at once: the UDP port moves to the
+       second service below. */ -}}
+{{- $mainPorts := list -}}
+{{- $tcp := dict "name" $main.portName "port" $main.port "targetPort" "ss-tcp" "protocol" "TCP" -}}
+{{- if $isNodePort -}}
+{{- $_ := set $tcp "nodePort" $main.nodePort -}}
+{{- end -}}
+{{- $mainPorts = append $mainPorts $tcp -}}
+{{- if not $isLoadBalancer -}}
+{{- $udp := dict "name" "ss-udp" "port" $main.port "targetPort" "ss-udp" "protocol" "UDP" -}}
+{{- if $isNodePort -}}
+{{- $_ := set $udp "nodePort" $main.nodePort -}}
+{{- end -}}
+{{- $mainPorts = append $mainPorts $udp -}}
+{{- if $hasKcptun -}}
+{{- $mainPorts = append $mainPorts (dict "name" "kcptun" "port" $kcptun.port "targetPort" "kcptun" "protocol" "UDP") -}}
+{{- end -}}
+{{- end -}}
+{{- $services := dict "main" (dict "type" $main.type "annotations" $main.annotations "internalTrafficPolicy" $main.internalTrafficPolicy "ports" $mainPorts) -}}
+{{- if and .Values.service.udp.enabled $isLoadBalancer -}}
+{{- $udpPorts := list (dict "name" "ss-udp" "port" $main.port "targetPort" "ss-udp" "protocol" "UDP") -}}
+{{- if $hasKcptun -}}
+{{- $udpPorts = append $udpPorts (dict "name" "kcptun" "port" $kcptun.port "targetPort" "kcptun" "protocol" "UDP") -}}
+{{- end -}}
+{{- $udpService := dict "type" $main.type "annotations" (mergeOverwrite (dict) ($main.annotations | default dict) (.Values.service.udp.annotations | default dict)) "ports" $udpPorts -}}
+{{- if $main.loadBalancerIP -}}
+{{- $_ := set $udpService "loadBalancerIP" $main.loadBalancerIP -}}
+{{- end -}}
+{{- $_ := set $services "udp" $udpService -}}
+{{- end -}}
+{{- include "common.service" (dict "ctx" $ "services" $services) }}

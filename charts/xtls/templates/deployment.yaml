@@ -1,48 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{ include "xtls.fullname" . }}
-  labels:
-    {{- include "xtls.labels" . | nindent 4 }}
-spec:
-  replicas: {{ .Values.replicaCount }}
-  selector:
-    matchLabels:
-      {{- include "xtls.selectorLabels" . | nindent 6 }}
-  template:
-    metadata:
-      labels:
-        {{- include "xtls.selectorLabels" . | nindent 8 }}
-    spec:
-      volumes:
-        - name: {{ include "xtls.fullname" . }}
-          configMap:
-            name: {{ include "xtls.fullname" . }}
-            items:
-              - key: config.json
-                path: config.json
-      containers:
-        - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          volumeMounts:
-            - name: {{ include "xtls.fullname" . }}
-              mountPath: /etc/xray/
-          ports:
-            - name: https
-              containerPort: 443
-              protocol: TCP
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+{{- /* config.json is mounted into the container from the chart ConfigMap. */ -}}
+{{- $configMapName := include "common.fullname" . -}}
+{{- $volumes := list (dict "name" $configMapName "configMap" (dict "name" $configMapName "items" (list (dict "key" "config.json" "path" "config.json")))) -}}
+{{- $volumeMounts := list (dict "name" $configMapName "mountPath" "/etc/xray/") -}}
+{{- include "common.deployment" (dict "ctx" $ "volumes" $volumes "volumeMounts" $volumeMounts) }}

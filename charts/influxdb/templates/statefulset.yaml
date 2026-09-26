@@ -1,77 +1,14 @@
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: {{ include "influxdb.fullname" . }}
-  labels:
-    {{- include "influxdb.labels" . | nindent 4 }}
-spec:
-  serviceName: {{ include "influxdb.fullname" . }}-headless
-  replicas: {{ .Values.replicaCount }}
-  selector:
-    matchLabels:
-      app: {{ include "influxdb.fullname" . }}
-  template:
-    metadata:
-      labels:
-        app: {{ include "influxdb.fullname" . }}
-    spec:
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      containers:
-        - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            - influxdb3
-          args:
-            - serve
-            - --node-id=${HOSTNAME}
-            {{- if .Values.persistence.enabled }}
-            - --object-store=file
-            - --data-dir={{ .Values.persistence.mountPath }}/influxdb
-            - --plugin-dir={{ .Values.persistence.mountPath }}/plugins
-            {{- end }}
-          ports:
-            - containerPort: {{ .Values.service.targetPort }}
-          resources:
-            {{ toYaml .Values.resources | nindent 12 }}
-          {{- if .Values.persistence.enabled }}
-          volumeMounts:
-            - name: data
-              mountPath: {{ .Values.persistence.mountPath }}
-          {{- else }}
-          volumeMounts:
-            - name: ephemeral-data
-              mountPath: {{ .Values.persistence.mountPath }}
-          {{- end }}
-      {{- if not .Values.persistence.enabled }}
-      volumes:
-        - name: ephemeral-data
-          emptyDir: {}
-      {{- end }}
-  {{- if .Values.persistence.enabled }}
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-        labels:
-          {{- include "influxdb.labels" . | nindent 10 }}
-      spec:
-        accessModes:
-          - {{ .Values.persistence.accessMode }}
-        resources:
-          requests:
-            storage: {{ .Values.persistence.size }}
-      {{- if .Values.persistence.storageClass }}
-        storageClassName: "{{ .Values.persistence.storageClass }}"
-      {{- end }}
-  {{- end }}
+{{- $persistence := .Values.persistence -}}
+{{- $args := list "serve" "--node-id=${HOSTNAME}" -}}
+{{- if $persistence.enabled -}}
+{{- $args = concat $args (list "--object-store=file" (printf "--data-dir=%s/influxdb" $persistence.mountPath) (printf "--plugin-dir=%s/plugins" $persistence.mountPath)) -}}
+{{- end -}}
+{{- /* without persistence the data directory is an emptyDir that dies with the pod */ -}}
+{{- $volumes := list -}}
+{{- $volumeMounts := list -}}
+{{- if not $persistence.enabled -}}
+{{- $volumes = list (dict "name" "ephemeral-data" "emptyDir" (dict)) -}}
+{{- $volumeMounts = list (dict "name" "ephemeral-data" "mountPath" $persistence.mountPath) -}}
+{{- end -}}
+{{- $name := include "common.fullname" . -}}
+{{- include "common.statefulset" (dict "ctx" $ "args" $args "ports" (list (dict "name" .Values.service.main.portName "containerPort" .Values.service.main.targetPort "protocol" "TCP")) "volumes" $volumes "volumeMounts" $volumeMounts "serviceName" (printf "%s-headless" $name)) }}

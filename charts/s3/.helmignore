@@ -21,3 +21,6 @@
 .idea/
 *.tmproj
 .vscode/
+# Image build inputs, kept next to the chart but not packaged with it
+Dockerfile
+Makefile

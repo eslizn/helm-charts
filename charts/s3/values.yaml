@@ -1,30 +1,28 @@
 # Default values for s3.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# The schema is shared by every chart in this repository: see
+# ../common/templates/_helpers.tpl and the repository README.
+# The driver specific keys (registrar, provisioner, storageClass, secret) stay at
+# the top level, the rest follows the shared schema.
 
+# Kept for the shared schema: the driver runs as a DaemonSet, i.e. one pod per node.
 replicaCount: 1
-
-registrar:
-  repository: quay.io/k8scsi/csi-node-driver-registrar
-  pullPolicy: IfNotPresent
-  tag: v1.2.0
-
-provisioner:
-  repository: quay.io/k8scsi/csi-provisioner
-  pullPolicy: IfNotPresent
-  tag: v2.1.0
 
 image:
   repository: eslizn/csi-s3-provisioner
+  tag: latest
   pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+
+# CSI node-driver-registrar sidecar, used by templates/_s3.tpl.
+registrar:
+  repository: quay.io/k8scsi/csi-node-driver-registrar
+  tag: v1.2.0
+  pullPolicy: IfNotPresent
 
 storageClass:
   # Specifies whether the storage class should be created
   create: true
-  # Name
-  name:
+  # Name of the storage class, defaults to the release fullname when empty
+  name: ""
   # Use a single bucket for all dynamically provisioned persistent volumes
   singleBucket: ""
   # mounter to use - either geesefs, s3fs or rclone (default geesefs)
@@ -38,32 +36,70 @@ storageClass:
   # annotations:
   #   storageclass.kubernetes.io/is-default-class: "true"
   annotations: {}
+  # Driver name, also used as the CSIDriver name and in the node plugin paths
   provisioner: s3
 
+# Name of the Secret the StorageClass references through its
+# csi.storage.k8s.io/*-secret-name parameters. The chart does not create it:
+# the secret must exist in the release namespace and hold the credentials of the
+# csi-s3 driver (accessKeyID, secretAccessKey, endpoint, region).
 secret:
-  # Specifies whether the secret should be created
-  create: true
-  # Name of the secret
   name: s3
-  # S3 Access Key
-  accessKey: ""
-  # S3 Secret Key
-  secretKey: ""
-  # Endpoint
-  endpoint: https://storage.yandexcloud.net
-  # Region
-  region: ""
-
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
 serviceAccount:
-  # Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
   name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+# The driver mounts FUSE filesystems on the node, so it needs privileged access.
+securityContext:
+  privileged: true
+  capabilities:
+    add: ["SYS_ADMIN"]
+  allowPrivilegeEscalation: true
+
+# Container level configuration of the driver container. The host path volumes
+# and the registrar sidecar are built in templates/_s3.tpl.
+workload:
+  kind: DaemonSet
+  args:
+    - "--endpoint=$(CSI_ENDPOINT)"
+    - "--nodeid=$(NODE_ID)"
+    - "--v=4"
+  env:
+    - name: CSI_ENDPOINT
+      value: unix:///csi/csi.sock
+    - name: NODE_ID
+      valueFrom:
+        fieldRef:
+          fieldPath: spec.nodeName
+  volumeMounts:
+    - name: plugin-dir
+      mountPath: /csi
+    - name: stage-dir
+      mountPath: /var/lib/kubelet/plugins/kubernetes.io/csi
+      mountPropagation: Bidirectional
+    - name: pods-mount-dir
+      mountPath: /var/lib/kubelet/pods
+      mountPropagation: Bidirectional
+    - name: fuse-device
+      mountPath: /dev/fuse
+    - name: systemd-control
+      mountPath: /run/systemd
+
+# The driver exposes no service and no ingress; the keys stay for schema parity.
+service: {}
+ingress:
+  enabled: false
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

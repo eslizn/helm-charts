@@ -1,0 +1,18 @@
+# Vendored chart dependencies (built from ../common by `helm dependency build`)
+charts/*/charts/*.tgz
+
+# Packaged charts
+*.tgz
+
+# Chart releaser working files
+.chart-releaser-*
+
+# Local values overrides
+values.local.yaml
+*.local.yaml
+
+# Editors and OS
+.DS_Store
+.idea/
+*.iml
+.vscode/

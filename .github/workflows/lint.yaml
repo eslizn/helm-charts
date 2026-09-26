@@ -1,0 +1,56 @@
+name: Lint Charts
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Build chart dependencies
+        run: |
+          set -euo pipefail
+          for chart in charts/*/; do
+            [ -f "${chart}Chart.yaml" ] || continue
+            helm dependency build "${chart}"
+          done
+
+      - name: Lint charts
+        run: |
+          set -euo pipefail
+          for chart in charts/*/; do
+            [ -f "${chart}Chart.yaml" ] || continue
+            echo "==> lint ${chart}"
+            helm lint "${chart}" --strict
+          done
+
+      # Library charts (charts/common) are not installable, so they are rendered
+      # through the charts that depend on them instead.
+      - name: Render charts
+        run: |
+          set -euo pipefail
+          for chart in charts/*/; do
+            [ -f "${chart}Chart.yaml" ] || continue
+            grep -qE '^type: *library' "${chart}Chart.yaml" && continue
+            echo "==> template ${chart}"
+            helm template test "${chart}" > /dev/null
+          done
+
+      - name: Package charts
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/packages
+          for chart in charts/*/; do
+            [ -f "${chart}Chart.yaml" ] || continue
+            echo "==> package ${chart}"
+            helm package "${chart}" --destination /tmp/packages
+          done

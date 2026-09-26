@@ -1,0 +1,31 @@
+PicoClaw {{ .Chart.AppVersion }} is deployed: the launcher console and the
+gateway run in the same pod.
+
+1. Open the web console:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+   http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}{{ (first .paths).path }}
+{{- end }}
+{{- else }}
+   kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "common.fullname" . }} 18800:{{ .Values.service.main.port }}
+   then open http://127.0.0.1:18800
+{{- end }}
+
+2. Dashboard token:
+{{- if or .Values.launcher.token .Values.launcher.existingSecret }}
+   kubectl --namespace {{ .Release.Namespace }} get secret {{ include "picoclaw.launcherSecretName" . }} -o jsonpath='{.data.{{ .Values.launcher.tokenKey | default "token" }}}' | base64 -d
+{{- else }}
+   No launcher.token is set, so a random token is generated on every start and
+   printed to the log:
+   kubectl --namespace {{ .Release.Namespace }} logs deploy/{{ include "common.fullname" . }} | grep -i token
+   Set launcher.token (or launcher.existingSecret) to keep it stable across restarts.
+{{- end }}
+
+3. Gateway endpoint (the upstream image health checks this path itself):
+   http://{{ include "common.fullname" . }}-gateway:{{ .Values.service.gateway.port }}/health
+
+{{- if not (include "picoclaw.configMountEnabled" .) }}
+4. This release does not mount a config.json: configure providers and channels in
+   the web console, which stores them at
+   {{ .Values.persistence.mountPath }}/config.json on the persistent volume.
+{{- end }}

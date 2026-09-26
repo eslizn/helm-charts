@@ -1,0 +1,17 @@
+apiVersion: v2
+name: picoclaw
+description: PicoClaw - ultra-lightweight personal AI assistant (Web console + gateway)
+type: application
+version: 0.1.0
+appVersion: "v0.3.1"
+kubeVersion: ">=1.24.0-0"
+home: https://picoclaw.io
+sources:
+  - https://github.com/sipeed/picoclaw
+maintainers:
+  - name: eslizn
+    url: https://github.com/eslizn
+dependencies:
+  - name: common
+    version: 0.1.0
+    repository: file://../common

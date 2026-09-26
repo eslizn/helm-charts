@@ -1,0 +1,27 @@
+{{- /* The launcher binds the gateway to 127.0.0.1 by default, which would make the
+       gateway service unreachable from outside the pod. The chart therefore
+       always sets PICOCLAW_GATEWAY_HOST (gateway.host), unless the same variable
+       is already listed in workload.env. */ -}}
+{{- $env := deepCopy (.Values.workload.env | default list) -}}
+{{- $gatewayHostSet := false -}}
+{{- range $env -}}
+{{- if eq .name "PICOCLAW_GATEWAY_HOST" -}}
+{{- $gatewayHostSet = true -}}
+{{- end -}}
+{{- end -}}
+{{- if not $gatewayHostSet -}}
+{{- $env = append $env (dict "name" "PICOCLAW_GATEWAY_HOST" "value" (.Values.gateway.host | default "0.0.0.0")) -}}
+{{- end -}}
+{{- /* A stable dashboard token instead of the random one printed to the log. */ -}}
+{{- if or .Values.launcher.token .Values.launcher.existingSecret -}}
+{{- $env = append $env (dict "name" "PICOCLAW_LAUNCHER_TOKEN" "valueFrom" (dict "secretKeyRef" (dict "name" (include "picoclaw.launcherSecretName" .) "key" (.Values.launcher.tokenKey | default "token")))) -}}
+{{- end -}}
+{{- /* A config.json mounted inside the persisted data directory keeps the
+       upstream entrypoint from running onboard and exiting on a fresh volume. */ -}}
+{{- $volumes := list -}}
+{{- $volumeMounts := list -}}
+{{- if include "picoclaw.configMountEnabled" . -}}
+{{- $volumes = list (dict "name" "config" "secret" (dict "secretName" (include "picoclaw.configSecretName" .) "items" (list (dict "key" (.Values.config.key | default "config.json") "path" "config.json")))) -}}
+{{- $volumeMounts = list (dict "name" "config" "mountPath" (printf "%s/config.json" .Values.persistence.mountPath) "subPath" "config.json" "readOnly" true) -}}
+{{- end -}}
+{{- include "common.deployment" (dict "ctx" $ "env" $env "volumes" $volumes "volumeMounts" $volumeMounts) }}

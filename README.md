@@ -23,6 +23,7 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 | [mindsdb](charts/mindsdb) | 2.0.0 | MindsDB - AI layer over your database |
 | [octopus](charts/octopus) | 0.1.0 | Octopus service |
 | [openclaw](charts/openclaw) | 0.2.0 | OpenClaw gateway |
+| [picoclaw](charts/picoclaw) | 0.1.0 | PicoClaw - ultra-lightweight personal AI assistant (Web console + gateway) |
 | [s3](charts/s3) | 2.0.0 | CSI driver for S3-backed volumes |
 | [shadowsocks](charts/shadowsocks) | 2.0.0 | shadowsocks-libev server |
 | [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.0 | shadowsocks-rust server |

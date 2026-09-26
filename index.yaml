@@ -2,6 +2,26 @@ apiVersion: v1
 entries:
   aktools:
   - apiVersion: v2
+    created: "2026-09-26T14:32:10.910095134Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.0
+    description: AKTools - HTTP API for A-share market data (https://github.com/akfamily/aktools)
+    digest: 405c2c4e5d4ef7f43880db1f689b34866807bc55fdeff89a0517516d62ff261c
+    home: https://github.com/akfamily/aktools
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: aktools
+    sources:
+    - https://github.com/akfamily/aktools
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/aktools-0.2.0/aktools-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
     appVersion: 1.16.0
     created: "2024-10-12T14:41:02.554947744Z"
     description: A Helm chart for Kubernetes
@@ -11,7 +31,43 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/aktools-0.1.0/aktools-0.1.0.tgz
     version: 0.1.0
+  common:
+  - apiVersion: v2
+    created: "2026-09-26T14:32:11.051508005Z"
+    description: Library chart with the shared named templates used by every chart
+      in this repository
+    digest: a597d914251e2fdfd1ca369d7422b62e37c0ce9c512a76d9fee20959e2586136
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: common
+    type: library
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/common-0.1.0/common-0.1.0.tgz
+    version: 0.1.0
   influxdb:
+  - apiVersion: v2
+    appVersion: v3.3.0
+    created: "2026-09-26T14:32:11.207100911Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.0
+    description: InfluxDB 3 Core with the optional InfluxDB 3 Explorer UI
+    digest: 3f5c040a65e605c867cd581cab872c9bbdff6d97082766810b56b46f1b32d064
+    home: https://www.influxdata.com/products/influxdb3/
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: influxdb
+    sources:
+    - https://github.com/influxdata/influxdb
+    - https://github.com/influxdata/influxdb3-ui
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/influxdb-2.0.0/influxdb-2.0.0.tgz
+    version: 2.0.0
   - apiVersion: v2
     appVersion: v3.3.0
     created: "2025-08-29T15:49:12.359080372Z"
@@ -74,6 +130,27 @@ entries:
     - https://github.com/eslizn/helm-charts/releases/download/influxdb-explorer-0.1.3/influxdb-explorer-0.1.3.tgz
     version: 0.1.3
   mindsdb:
+  - apiVersion: v2
+    appVersion: 25.8.2
+    created: "2026-09-26T14:32:11.40812934Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.0
+    description: MindsDB - AI layer over your database (https://github.com/mindsdb/mindsdb)
+    digest: 926d589e8d833b9bc5321e765e2c07b99b9443ea8d1e6f5c9ec7ac257c5c3610
+    home: https://mindsdb.com
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: mindsdb
+    sources:
+    - https://github.com/mindsdb/mindsdb
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/mindsdb-2.0.0/mindsdb-2.0.0.tgz
+    version: 2.0.0
   - apiVersion: v2
     appVersion: 25.8.2
     created: "2025-08-21T14:35:49.773307959Z"
@@ -236,6 +313,23 @@ entries:
     version: 0.1.0
   octopus:
   - apiVersion: v2
+    created: "2026-09-26T14:32:11.539424803Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.0
+    description: Octopus - self-hosted service built from the image docker.io/eslizn/octopus
+    digest: 0f3e9f2488226f4e275c2bf2143657c52872e3b677f6ed02d7af5a042678a037
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: octopus
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/octopus-0.1.0/octopus-0.1.0.tgz
+    version: 0.1.0
+  - apiVersion: v2
     appVersion: 1.16.0
     created: "2026-03-09T14:26:49.390100968Z"
     description: A Helm chart for Kubernetes
@@ -266,6 +360,23 @@ entries:
     - https://github.com/eslizn/helm-charts/releases/download/octopus-0.0.1/octopus-0.0.1.tgz
     version: 0.0.1
   openclaw:
+  - apiVersion: v2
+    created: "2026-09-26T14:32:11.712301431Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.0
+    description: OpenClaw gateway, deployed from the self-built image docker.io/eslizn/openclaw
+    digest: 484164a562fde1e10ee89891ab87df8310c1098f1d5992d8cc70438357a83dc3
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: openclaw
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/openclaw-0.2.0/openclaw-0.2.0.tgz
+    version: 0.2.0
   - apiVersion: v2
     appVersion: 1.16.0
     created: "2026-03-01T02:41:04.011471147Z"
@@ -300,6 +411,24 @@ entries:
   s3:
   - apiVersion: v2
     appVersion: 0.43.2
+    created: "2026-09-26T14:32:11.886849499Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.0
+    description: CSI driver for S3-backed volumes (https://github.com/yandex-cloud/k8s-csi-s3)
+    digest: 858e90f30f1854821e61ed0fa9d9db727abd3854076e30ecd8612f180e3f3cc0
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: s3
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/s3-2.0.0/s3-2.0.0.tgz
+    version: 2.0.0
+  - apiVersion: v2
+    appVersion: 0.43.2
     created: "2025-08-21T14:35:49.930329181Z"
     description: A Helm chart for Kubernetes
     digest: 12bd16e3a86c9f508820486d0fdfdcd04a6a4495af9dc52d01d7af01b1551f71
@@ -319,6 +448,27 @@ entries:
     - https://github.com/eslizn/helm-charts/releases/download/s3-0.1.0/s3-0.1.0.tgz
     version: 0.1.0
   shadowsocks:
+  - apiVersion: v2
+    appVersion: v3.3.5
+    created: "2026-09-26T14:32:12.082322068Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.0
+    description: shadowsocks-libev server (https://github.com/shadowsocks/shadowsocks-libev)
+    digest: d3a48c60348aff9445fa26a2a4b58df23bad1e8aea99d5d50b6a9d4f2b85f719
+    home: https://github.com/shadowsocks/shadowsocks-libev
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: shadowsocks
+    sources:
+    - https://github.com/shadowsocks/shadowsocks-libev
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/shadowsocks-2.0.0/shadowsocks-2.0.0.tgz
+    version: 2.0.0
   - apiVersion: v2
     appVersion: v3.3.5
     created: "2026-03-31T19:51:46.337696412Z"
@@ -402,6 +552,27 @@ entries:
   shadowsocks-rust:
   - apiVersion: v2
     appVersion: 1.24.0
+    created: "2026-09-26T14:32:12.35349621Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.0
+    description: shadowsocks-rust server (https://github.com/shadowsocks/shadowsocks-rust)
+    digest: 2a3caebd7f249eb11d7326711031795079f0ac443c739b5e4fa3257e92ab5553
+    home: https://github.com/shadowsocks/shadowsocks-rust
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: shadowsocks-rust
+    sources:
+    - https://github.com/shadowsocks/shadowsocks-rust
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/shadowsocks-rust-0.2.0/shadowsocks-rust-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
+    appVersion: 1.24.0
     created: "2026-04-02T04:32:43.657058467Z"
     description: A Helm chart for shadowsocks-rust
     digest: 673a1c0d125eb9848eb1e8adf0a4201e7b5f6539dba6ae4281dc489ae3a7cd03
@@ -453,6 +624,27 @@ entries:
   xtls:
   - apiVersion: v2
     appVersion: 1.8.9
+    created: "2026-09-26T14:32:12.527571064Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.0
+    description: Xray-core VLESS/REALITY proxy (https://github.com/XTLS/Xray-core)
+    digest: 688dc19166c88e50e890a2e4d65b3f4b71f2e3dd6952ab44382eebaf84fcde2e
+    home: https://github.com/XTLS/Xray-core
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: xtls
+    sources:
+    - https://github.com/XTLS/Xray-core
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/xtls-2.0.0/xtls-2.0.0.tgz
+    version: 2.0.0
+  - apiVersion: v2
+    appVersion: 1.8.9
     created: "2025-08-21T14:35:50.240392304Z"
     description: A Helm chart for Kubernetes
     digest: f4043613d4783288828002616acb1c7943a1dd60f79181689c3cfc83f3e1e9ca
@@ -501,4 +693,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-04-02T04:32:43.657158433Z"
+generated: "2026-09-26T14:32:12.527846241Z"

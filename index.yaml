@@ -366,6 +366,29 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/openclaw-0.1.0/openclaw-0.1.0.tgz
     version: 0.1.0
+  picoclaw:
+  - apiVersion: v2
+    appVersion: v0.3.1
+    created: "2026-09-26T15:30:25.955136324Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.0
+    description: PicoClaw - ultra-lightweight personal AI assistant (Web console +
+      gateway)
+    digest: 180867d77f210f28e3c94fd4f6dcd062a1cd5ddbff9f62ab573d93d5e767adab
+    home: https://picoclaw.io
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: picoclaw
+    sources:
+    - https://github.com/sipeed/picoclaw
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/picoclaw-0.1.0/picoclaw-0.1.0.tgz
+    version: 0.1.0
   s3:
   - apiVersion: v2
     appVersion: 0.43.2
@@ -651,4 +674,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-09-26T14:32:12.527846241Z"
+generated: "2026-09-26T15:30:25.955231923Z"

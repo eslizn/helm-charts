@@ -2,6 +2,27 @@ apiVersion: v1
 entries:
   aktools:
   - apiVersion: v2
+    appVersion: 0.0.91
+    created: "2026-09-28T16:39:35.000658523Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.1
+    description: AKTools - HTTP API for A-share market data (https://github.com/akfamily/aktools)
+    digest: 5ec86da97b9a64be2b43096a8fab716c9b1a01de365993099972549567f2a52f
+    home: https://github.com/akfamily/aktools
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: aktools
+    sources:
+    - https://github.com/akfamily/aktools
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/aktools-0.2.1/aktools-0.2.1.tgz
+    version: 0.2.1
+  - apiVersion: v2
     created: "2026-09-26T14:32:10.910095134Z"
     dependencies:
     - name: common
@@ -32,6 +53,19 @@ entries:
     - https://github.com/eslizn/helm-charts/releases/download/aktools-0.1.0/aktools-0.1.0.tgz
     version: 0.1.0
   common:
+  - apiVersion: v2
+    created: "2026-09-28T16:39:35.145957385Z"
+    description: Library chart with the shared named templates used by every chart
+      in this repository
+    digest: 9b2943e27d127ff612a2d9f47c3dd8d76092fd9ceee516546ec0218af4407d07
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: common
+    type: library
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/common-0.1.1/common-0.1.1.tgz
+    version: 0.1.1
   - apiVersion: v2
     created: "2026-09-26T14:32:11.051508005Z"
     description: Library chart with the shared named templates used by every chart
@@ -99,6 +133,27 @@ entries:
     - https://github.com/eslizn/helm-charts/releases/download/influxdb-0.1.3/influxdb-0.1.3.tgz
     version: 0.1.3
   mindsdb:
+  - apiVersion: v2
+    appVersion: v26.1.0
+    created: "2026-09-28T16:39:35.299504374Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.1
+    description: MindsDB - AI layer over your database (https://github.com/mindsdb/mindsdb)
+    digest: 3abb02e23e44176a635b15d35cf78b77ebdf6d54dabcee8ed9437152d2fa76d7
+    home: https://mindsdb.com
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: mindsdb
+    sources:
+    - https://github.com/mindsdb/mindsdb
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/mindsdb-2.0.1/mindsdb-2.0.1.tgz
+    version: 2.0.1
   - apiVersion: v2
     appVersion: 25.8.2
     created: "2026-09-26T14:32:11.40812934Z"
@@ -283,6 +338,28 @@ entries:
   node-red:
   - apiVersion: v2
     appVersion: 5.0.7-24
+    created: "2026-09-28T16:39:35.462428729Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.1
+    description: Node-RED - low-code programming for event-driven applications
+    digest: d50e67137336edeca9902b2b02067d61485b9b863c4995b289ad257795bd07d1
+    home: https://nodered.org
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: node-red
+    sources:
+    - https://github.com/node-red/node-red
+    - https://github.com/node-red/node-red-docker
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/node-red-0.1.1/node-red-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: 5.0.7-24
     created: "2026-09-28T11:36:14.724015423Z"
     dependencies:
     - name: common
@@ -454,6 +531,27 @@ entries:
   shadowsocks:
   - apiVersion: v2
     appVersion: v3.3.5
+    created: "2026-09-28T16:39:35.587458913Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.1
+    description: shadowsocks-libev server (https://github.com/shadowsocks/shadowsocks-libev)
+    digest: 70b1d716c17bafd47887ee01a5c153df3f197f9a677b1b12e55036367c96fca3
+    home: https://github.com/shadowsocks/shadowsocks-libev
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: shadowsocks
+    sources:
+    - https://github.com/shadowsocks/shadowsocks-libev
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/shadowsocks-2.0.1/shadowsocks-2.0.1.tgz
+    version: 2.0.1
+  - apiVersion: v2
+    appVersion: v3.3.5
     created: "2026-09-26T14:32:12.082322068Z"
     dependencies:
     - name: common
@@ -555,6 +653,27 @@ entries:
     version: 0.1.2
   shadowsocks-rust:
   - apiVersion: v2
+    appVersion: v1.25.0
+    created: "2026-09-28T16:39:35.7133265Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.1
+    description: shadowsocks-rust server (https://github.com/shadowsocks/shadowsocks-rust)
+    digest: d76a3ed67e7422a2c8ba3b5c047aca00f52f51a35dff6bc6a94238ab4c197c19
+    home: https://github.com/shadowsocks/shadowsocks-rust
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: shadowsocks-rust
+    sources:
+    - https://github.com/shadowsocks/shadowsocks-rust
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/shadowsocks-rust-0.2.1/shadowsocks-rust-0.2.1.tgz
+    version: 0.2.1
+  - apiVersion: v2
     appVersion: 1.24.0
     created: "2026-09-26T14:32:12.35349621Z"
     dependencies:
@@ -627,6 +746,27 @@ entries:
     version: 0.1.0
   xtls:
   - apiVersion: v2
+    appVersion: 26.3.27
+    created: "2026-09-28T16:39:35.856944123Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.1
+    description: Xray-core VLESS/REALITY proxy (https://github.com/XTLS/Xray-core)
+    digest: b4b632e222d480a313e08a25bbe47baed85b8d40f37b5aef5da06f7f991c7697
+    home: https://github.com/XTLS/Xray-core
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: xtls
+    sources:
+    - https://github.com/XTLS/Xray-core
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/xtls-2.0.1/xtls-2.0.1.tgz
+    version: 2.0.1
+  - apiVersion: v2
     appVersion: 1.8.9
     created: "2026-09-26T14:32:12.527571064Z"
     dependencies:
@@ -697,4 +837,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-09-28T11:36:14.724085579Z"
+generated: "2026-09-28T16:39:35.857099812Z"

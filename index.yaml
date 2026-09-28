@@ -3,6 +3,27 @@ entries:
   aktools:
   - apiVersion: v2
     appVersion: 0.0.91
+    created: "2026-09-28T18:22:38.162400669Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.1
+    description: AKTools - HTTP API for A-share market data (https://github.com/akfamily/aktools)
+    digest: 48701cb38221663be5c2578296a9a5d1c8e876cd2adc74e41f01db19ea603aea
+    home: https://github.com/akfamily/aktools
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: aktools
+    sources:
+    - https://github.com/akfamily/aktools
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/aktools-0.2.2/aktools-0.2.2.tgz
+    version: 0.2.2
+  - apiVersion: v2
+    appVersion: 0.0.91
     created: "2026-09-28T16:39:35.000658523Z"
     dependencies:
     - name: common
@@ -858,4 +879,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-09-28T17:37:02.6731386Z"
+generated: "2026-09-28T18:22:38.162553296Z"

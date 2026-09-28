@@ -280,6 +280,29 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/mindsdb-0.1.0/mindsdb-0.1.0.tgz
     version: 0.1.0
+  node-red:
+  - apiVersion: v2
+    appVersion: 5.0.7-24
+    created: "2026-09-28T11:36:14.724015423Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.0
+    description: Node-RED - low-code programming for event-driven applications
+    digest: d79ab3dabd93964e676bf33e38fb33b9c341782a39bcdc09f5caa7ef0cf85977
+    home: https://nodered.org
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: node-red
+    sources:
+    - https://github.com/node-red/node-red
+    - https://github.com/node-red/node-red-docker
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/node-red-0.1.0/node-red-0.1.0.tgz
+    version: 0.1.0
   octopus:
   - apiVersion: v2
     created: "2026-09-26T14:32:11.539424803Z"
@@ -674,4 +697,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-09-26T15:30:25.955231923Z"
+generated: "2026-09-28T11:36:14.724085579Z"

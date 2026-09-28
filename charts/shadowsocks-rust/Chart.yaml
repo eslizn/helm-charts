@@ -2,8 +2,8 @@ apiVersion: v2
 name: shadowsocks-rust
 description: shadowsocks-rust server (https://github.com/shadowsocks/shadowsocks-rust)
 type: application
-version: 0.2.0
-appVersion: "1.24.0"
+version: 0.2.1
+appVersion: "v1.25.0"
 kubeVersion: ">=1.24.0-0"
 home: https://github.com/shadowsocks/shadowsocks-rust
 sources:
@@ -13,5 +13,5 @@ maintainers:
     url: https://github.com/eslizn
 dependencies:
   - name: common
-    version: 0.1.0
+    version: 0.1.1
     repository: file://../common

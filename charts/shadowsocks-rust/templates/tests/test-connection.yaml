@@ -1,1 +1,8 @@
-{{- include "common.testConnection" (dict "ctx" $) }}
+{{/* The service ports are derived from .Values.servers, so common.testConnection
+       cannot read them off the service entry the way it does elsewhere: the port
+       is computed here and passed in. Transport is TCP, so a server that only
+       speaks UDP leaves nothing to test and the test pod is skipped. */}}
+{{- $port := include "shadowsocks-rust.testPort" . | int -}}
+{{- if $port }}
+{{- include "common.testConnection" (dict "ctx" $ "port" $port) }}
+{{- end }}

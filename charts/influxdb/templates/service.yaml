@@ -1,5 +1,0 @@
-{{- $main := .Values.service.main -}}
-{{- $headless := .Values.service.headless -}}
-{{- $services := dict "main" (dict "type" $main.type "port" $main.port "targetPort" $main.targetPort "portName" $main.portName) -}}
-{{- $_ := set $services "headless" (dict "headless" true "port" $headless.port "targetPort" $headless.targetPort "portName" $headless.portName) -}}
-{{- include "common.service" (dict "ctx" $ "services" $services) }}

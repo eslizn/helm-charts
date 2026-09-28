@@ -19,6 +19,13 @@ servers:
 # Whether to download v2ray and xray plugin.
 downloadPlugins: false
 
+# Release tags for those downloads, e.g. "v1.3.1" and "v1.8.24". Empty means the
+# initContainer asks the GitHub API for the newest release of each, which is not
+# reproducible (and needs egress to api.github.com from the pod).
+pluginVersions:
+  v2ray: ""
+  xray: ""
+
 # Name of an existing ConfigMap with the config.json for shadowsocks-rust.
 # Leave empty to let the chart render the ConfigMap from .Values.servers.
 configMapName: ""
@@ -30,7 +37,9 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/shadowsocks/ssserver-rust
-  tag: "latest"
+  # Empty falls back to Chart.yaml appVersion, which is the upstream release
+  # tag (v1.25.0). ghcr.io publishes only v-prefixed version tags.
+  tag: ""
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

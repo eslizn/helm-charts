@@ -2,8 +2,8 @@ apiVersion: v2
 name: xtls
 description: Xray-core VLESS/REALITY proxy (https://github.com/XTLS/Xray-core)
 type: application
-version: 2.0.0
-appVersion: "1.8.9"
+version: 2.0.1
+appVersion: "26.3.27"
 kubeVersion: ">=1.24.0-0"
 home: https://github.com/XTLS/Xray-core
 sources:
@@ -13,5 +13,5 @@ maintainers:
     url: https://github.com/eslizn
 dependencies:
   - name: common
-    version: 0.1.0
+    version: 0.1.1
     repository: file://../common

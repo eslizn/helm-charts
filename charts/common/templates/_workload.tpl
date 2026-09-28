@@ -61,7 +61,10 @@ spec:
   {{- $volumes := .volumes | default $w.volumes -}}
   {{- if or $volumes $claimVolume }}
   volumes:
-    {{- if $mountVolume }}
+    {{- /* $claimVolume, not $mountVolume: a StatefulSet takes its claim from
+           volumeClaimTemplates, so referencing the fullname claim here would
+           point at a PVC that does not exist. */}}
+    {{- if $claimVolume }}
     - name: {{ $persistence.volumeName | default "data" }}
       persistentVolumeClaim:
         claimName: {{ $persistence.existingClaim | default (include "common.fullname" $ctx) }}
@@ -193,6 +196,7 @@ StatefulSet. Usage: include "common.statefulset" (dict "ctx" $ ...)
 {{- $v := $ctx.Values -}}
 {{- $w := $v.workload | default dict -}}
 {{- $persistence := $v.persistence | default dict -}}
+{{- $autoscaling := $v.autoscaling | default dict -}}
 {{- $fullname := .name | default (include "common.fullname" $ctx) -}}
 apiVersion: apps/v1
 kind: StatefulSet
@@ -209,7 +213,11 @@ spec:
   updateStrategy:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+  {{- /* omitted while autoscaling is on, like common.deployment, so an
+         upgrade does not reset the replica count the HPA settled on */}}
+  {{- if not $autoscaling.enabled }}
   replicas: {{ .replicaCount | default $v.replicaCount | default 1 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "common.selectorLabels" $ctx | nindent 6 }}

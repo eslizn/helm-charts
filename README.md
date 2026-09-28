@@ -18,17 +18,12 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 
 | Chart | Version | Description |
 |-------|---------|-------------|
-| [aktools](charts/aktools) | 0.2.0 | AKTools - HTTP API for A-share market data |
-| [influxdb](charts/influxdb) | 2.0.0 | InfluxDB 3 Core with the optional InfluxDB 3 Explorer UI |
-| [mindsdb](charts/mindsdb) | 2.0.0 | MindsDB - AI layer over your database |
-| [node-red](charts/node-red) | 0.1.0 | Node-RED - low-code programming for event-driven applications |
-| [octopus](charts/octopus) | 0.1.0 | Octopus service |
-| [openclaw](charts/openclaw) | 0.2.0 | OpenClaw gateway |
-| [picoclaw](charts/picoclaw) | 0.1.0 | PicoClaw - ultra-lightweight personal AI assistant (Web console + gateway) |
-| [s3](charts/s3) | 2.0.0 | CSI driver for S3-backed volumes |
-| [shadowsocks](charts/shadowsocks) | 2.0.0 | shadowsocks-libev server |
-| [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.0 | shadowsocks-rust server |
-| [xtls](charts/xtls) | 2.0.0 | Xray-core VLESS/REALITY proxy |
+| [aktools](charts/aktools) | 0.2.1 | AKTools - HTTP API for A-share market data |
+| [mindsdb](charts/mindsdb) | 2.0.1 | MindsDB - AI layer over your database |
+| [node-red](charts/node-red) | 0.1.1 | Node-RED - low-code programming for event-driven applications |
+| [shadowsocks](charts/shadowsocks) | 2.0.1 | shadowsocks-libev server |
+| [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.1 | shadowsocks-rust server |
+| [xtls](charts/xtls) | 2.0.1 | Xray-core VLESS/REALITY proxy |
 
 `charts/common` is a library chart (not installable): it holds the shared named
 templates every chart includes.
@@ -48,8 +43,8 @@ charts/
 
 Every chart exposes the same top level keys, so a values file that works for one
 chart transfers to the others. What changes per chart is the app specific
-sections (`shadowsocks.*`, `kcptun.*`, `s3.*`, `xtls.options`, `mindsdb.*`,
-`explorer.*`).
+sections (`shadowsocks.*`, `kcptun.*`, `xtls.options`, `mindsdb.*`,
+`nodeRed.*`).
 
 ```yaml
 replicaCount: 1
@@ -134,7 +129,18 @@ The `Lint Charts` workflow runs `helm lint --strict`, `helm template` and
   was renamed to `persistence`, and the `helm create` placeholder `appVersion`
   was dropped. This is a breaking values change for every chart (major version
   bump). Upgrading an existing release may require recreating immutable fields
-  (`spec.selector` on the influxdb StatefulSet, `spec.serviceName` on openclaw).
+  (for example `spec.selector` on the influxdb StatefulSet).
 - **2026-09** - `influxdb-explorer` was merged into `influxdb` as the optional
   `explorer.enabled` component, and `postgres` was removed from the repository
   (its already published versions stay installable from the repository index).
+- **2026-09** - `octopus`, `openclaw` and `picoclaw` were removed from the
+  repository (their already published versions stay installable from the
+  repository index).
+- **2026-09** - `influxdb` and `s3` were removed in favour of the charts their
+  vendors publish: `influxdata/influxdb3-core` (InfluxDB 3 Core only - the
+  Explorer UI has no official chart) and `csi-s3` from
+  `https://yandex-cloud.github.io/k8s-csi-s3/charts`. Where a chart stays, its
+  `appVersion` now tracks the upstream release and `image.tag` is pinned to the
+  matching image tag instead of `latest`/`3-core`. `aktools` publishes to PyPI
+  only, so its image is built from the upstream Dockerfile with the same version
+  pinned and pushed to `eslizn/aktools` (build command in the chart values).

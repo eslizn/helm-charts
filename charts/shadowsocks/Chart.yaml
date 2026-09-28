@@ -2,7 +2,7 @@ apiVersion: v2
 name: shadowsocks
 description: shadowsocks-libev server (https://github.com/shadowsocks/shadowsocks-libev)
 type: application
-version: 2.0.0
+version: 2.0.1
 appVersion: "v3.3.5"
 kubeVersion: ">=1.24.0-0"
 home: https://github.com/shadowsocks/shadowsocks-libev
@@ -13,5 +13,5 @@ maintainers:
     url: https://github.com/eslizn
 dependencies:
   - name: common
-    version: 0.1.0
+    version: 0.1.1
     repository: file://../common

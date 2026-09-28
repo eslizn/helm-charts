@@ -7,14 +7,25 @@
 {{- $ports = append $ports $port -}}
 {{- end -}}
 {{- $configMapName := default (include "common.fullname" .) .Values.configMapName -}}
-{{- $volumes := list (dict "name" "config" "configMap" (dict "name" $configMapName)) (dict "name" "plugins" "emptyDir" (dict)) -}}
-{{- $volumeMounts := list (dict "name" "config" "mountPath" "/etc/shadowsocks-rust" "readOnly" true) (dict "name" "plugins" "mountPath" "/usr/local/bin") -}}
+{{- $volumes := list (dict "name" "config" "configMap" (dict "name" $configMapName)) -}}
+{{- $volumeMounts := list (dict "name" "config" "mountPath" "/etc/shadowsocks-rust" "readOnly" true) -}}
 {{- $initContainers := list -}}
 {{- if .Values.downloadPlugins -}}
+{{- /* The emptyDir is only mounted when there is something to download:
+       /usr/local/bin is on PATH, and shadowing it unconditionally hides
+       whatever else the image keeps there. */ -}}
+{{- $volumes = append $volumes (dict "name" "plugins" "emptyDir" (dict)) -}}
+{{- $volumeMounts = append $volumeMounts (dict "name" "plugins" "mountPath" "/usr/local/bin") -}}
 {{- $initContainers = list (dict "name" "plugin-downloader" "image" "busybox" "command" (list "sh" "-c" (include "shadowsocks-rust.pluginDownloadScript" .)) "volumeMounts" (list (dict "name" "plugins" "mountPath" "/usr/local/bin"))) -}}
 {{- end -}}
-{{- /* use the first server port for the health check */ -}}
-{{- $probePort := (first .Values.servers).server_port -}}
-{{- $livenessProbe := dict "tcpSocket" (dict "port" $probePort) "failureThreshold" 3 "initialDelaySeconds" 1 "timeoutSeconds" 1 -}}
-{{- $readinessProbe := dict "tcpSocket" (dict "port" $probePort) "initialDelaySeconds" 2 -}}
+{{- /* TCP health check against the first server that serves TCP; with none
+       (every entry udp_only) there is nothing a tcpSocket probe could reach and
+       the probes are left to the workload default. */ -}}
+{{- $probePort := include "shadowsocks-rust.probePort" . | int -}}
+{{- $livenessProbe := dict -}}
+{{- $readinessProbe := dict -}}
+{{- if $probePort -}}
+{{- $livenessProbe = dict "tcpSocket" (dict "port" $probePort) "failureThreshold" 3 "initialDelaySeconds" 1 "timeoutSeconds" 1 -}}
+{{- $readinessProbe = dict "tcpSocket" (dict "port" $probePort) "initialDelaySeconds" 2 -}}
+{{- end -}}
 {{- include "common.deployment" (dict "ctx" $ "ports" $ports "volumes" $volumes "volumeMounts" $volumeMounts "initContainers" $initContainers "livenessProbe" $livenessProbe "readinessProbe" $readinessProbe) }}

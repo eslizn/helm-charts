@@ -115,23 +115,3 @@ was called with an override dict".
 {{- end -}}
 {{- end -}}
 
-{{/*
-Value resolution: an explicitly passed override wins over the workload default,
-which wins over the top-level default. Empty overrides are ignored so a chart
-can pass "env" only when it computed one.
-*/}}
-{{- define "common.value" -}}
-{{- $ctx := .ctx -}}
-{{- $w := $ctx.Values.workload | default dict -}}
-{{- $value := "" -}}
-{{- if hasKey . "override" -}}
-{{- $value = .override -}}
-{{- else if hasKey $w .key -}}
-{{- $value = index $w .key -}}
-{{- else -}}
-{{- $value = index $ctx.Values .key -}}
-{{- end -}}
-{{- if not (empty $value) -}}
-{{- toYaml $value -}}
-{{- end -}}
-{{- end -}}

@@ -1,5 +1,5 @@
-{{- /* config.json is mounted into the container from the chart ConfigMap. */ -}}
-{{- $configMapName := include "common.fullname" . -}}
-{{- $volumes := list (dict "name" $configMapName "configMap" (dict "name" $configMapName "items" (list (dict "key" "config.json" "path" "config.json")))) -}}
-{{- $volumeMounts := list (dict "name" $configMapName "mountPath" "/etc/xray/") -}}
+{{- /* config.json is mounted into the container from the chart Secret. */ -}}
+{{- $configName := include "common.fullname" . -}}
+{{- $volumes := list (dict "name" $configName "secret" (dict "secretName" $configName "items" (list (dict "key" "config.json" "path" "config.json")))) -}}
+{{- $volumeMounts := list (dict "name" $configName "mountPath" "/etc/xray/") -}}
 {{- include "common.deployment" (dict "ctx" $ "volumes" $volumes "volumeMounts" $volumeMounts) }}

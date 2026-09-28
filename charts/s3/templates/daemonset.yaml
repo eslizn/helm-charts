@@ -1,6 +1,0 @@
-{{- include "common.daemonset" (dict
-      "ctx" $
-      "serviceAccountName" (include "common.serviceAccountName" $)
-      "volumes" (include "s3.volumes" . | fromYamlArray)
-      "extraContainers" (include "s3.registrarContainers" . | fromYamlArray)
-    ) }}

@@ -1,7 +1,7 @@
 Get the connection to the xtls server by running these commands:
 
 {{- if contains "NodePort" .Values.service.main.type }}
-  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[?(@.name=='{{ include "common.fullname" . }}')].nodePort}" services {{ include "common.fullname" . }})
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[?(@.name=='{{ .Values.service.main.portName }}')].nodePort}" services {{ include "common.fullname" . }})
   export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
   echo vless://$NODE_IP:$NODE_PORT
 {{- else if contains "ClusterIP" .Values.service.main.type }}

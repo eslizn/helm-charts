@@ -2,7 +2,7 @@ apiVersion: v2
 name: node-red
 description: Node-RED - low-code programming for event-driven applications
 type: application
-version: 0.1.0
+version: 0.1.1
 # Doubles as the default image tag (common.image falls back to appVersion when
 # image.tag is empty). Kept as the full upstream tag, node variant included:
 # 5.0.7-24 = Node-RED 5.0.7 on Node 24/alpine. Plain 5.0.7 and -debian variants
@@ -18,5 +18,5 @@ maintainers:
     url: https://github.com/eslizn
 dependencies:
   - name: common
-    version: 0.1.0
+    version: 0.1.1
     repository: file://../common

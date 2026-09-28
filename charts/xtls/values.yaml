@@ -6,8 +6,12 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/xtls/xray-core
-  tag: "latest"
-  pullPolicy: Always
+  # Empty falls back to Chart.yaml appVersion (26.3.27, the newest release
+  # upstream does not flag as a prerelease). The image tags drop the leading
+  # "v" of the release tag, so this must not be written as v26.3.27.
+  tag: ""
+  # Pinned tag, so there is nothing to re-check on every start.
+  pullPolicy: IfNotPresent
 
 imagePullSecrets: []
 nameOverride: ""
@@ -39,6 +43,8 @@ service:
     type: ClusterIP
     port: 443
     targetPort: https
+    # Named like the container port; without it the port would be called "http".
+    portName: https
 
 # Traefik IngressRouteTCP (traefik.io/v1alpha1) for the REALITY inbound: one
 # HostSNI rule per serverName found in options.inbounds, TLS passthrough.
@@ -47,8 +53,14 @@ ingress:
   entryPoints:
     - websecure
 
-# Xray-core configuration, rendered verbatim as the config.json of the ConfigMap
-# mounted at /etc/xray/. See https://xtls.github.io/config/ for the schema.
+# Xray-core configuration, rendered verbatim as the config.json of the Secret
+# mounted at /etc/xray/ (a Secret, not a ConfigMap: it holds the REALITY private
+# key and the client UUIDs). See https://xtls.github.io/config/ for the schema.
+#
+# The two credential placeholders below are empty, and xray does not start
+# without them: the chart still renders (so it stays lintable) but the container
+# exits immediately. Fill them from `xray uuid` and `xray x25519` - the private
+# key here, the public key on the client side.
 options:
   log:
     loglevel: warning

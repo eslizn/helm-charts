@@ -21,7 +21,7 @@ spec:
       args:
         - |
           url="http://{{ include "common.fullname" . }}:{{ .Values.service.main.port }}/"
-          if out=$(wget -O /dev/null "$url" 2>&1); then
+          if out=$(wget -T 10 -O /dev/null "$url" 2>&1); then
             echo "$url answered"
             exit 0
           fi

@@ -33,7 +33,9 @@ spec:
 {{- end -}}
 
 {{/*
-Helm test pod that connects to the main service port.
+Helm test pod that connects to the main service port. The port is the "port" of
+that service entry, or an explicit "port" override for charts that derive theirs
+(a service entry whose ports come from another values section has none).
 Usage: include "common.testConnection" .
 */}}
 {{- define "common.testConnection" -}}
@@ -41,7 +43,7 @@ Usage: include "common.testConnection" .
 {{- $v := $ctx.Values -}}
 {{- $component := .service | default "main" -}}
 {{- $svcName := include "common.componentName" (dict "ctx" $ctx "component" $component) -}}
-{{- $port := (index ($v.service | default dict) $component | default dict).port -}}
+{{- $port := .port | default (index ($v.service | default dict) $component | default dict).port -}}
 apiVersion: v1
 kind: Pod
 metadata:
@@ -55,6 +57,8 @@ spec:
     - name: wget
       image: {{ .image | default "busybox" }}
       command: ['wget']
-      args: ['{{ $svcName }}:{{ $port }}']
+      # -T: without a timeout a port that accepts but never answers hangs the
+      # test until busybox' own default (15 minutes) expires.
+      args: ['-T', '10', '{{ $svcName }}:{{ $port }}']
   restartPolicy: Never
 {{- end -}}

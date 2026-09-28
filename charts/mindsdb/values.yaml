@@ -6,7 +6,9 @@ replicaCount: 1
 
 image:
   repository: mindsdb/mindsdb
-  tag: "latest"
+  # Empty falls back to Chart.yaml appVersion, which is the upstream release
+  # tag (v26.1.0, 2026-04-23 - the newest the project has published).
+  tag: ""
   pullPolicy: IfNotPresent
 
 # Set to "nvidia" to run the pod with a GPU runtime class; the NVIDIA_* env

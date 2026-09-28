@@ -4,11 +4,14 @@ metadata:
   name: {{ include "common.fullname" . }}
   labels:
     {{- include "common.labels" . | nindent 4 }}
+{{- /* The config file is only mounted (and MINDSDB_CONFIG_FILE only set) when
+       persistence is enabled, so storage_dir follows the same value: a hardcoded
+       /storage would silently disagree with a custom persistence.mountPath. */}}
 data:
   config.json: |
     {
       "config_version": "1.4",
-      "storage_dir": "/storage",
+      "storage_dir": "{{ .Values.persistence.mountPath | default "/storage" }}",
       "debug": false,
       "integrations": {},
       "api": {

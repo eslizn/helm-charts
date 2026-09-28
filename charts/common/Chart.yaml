@@ -2,7 +2,7 @@ apiVersion: v2
 name: common
 description: Library chart with the shared named templates used by every chart in this repository
 type: library
-version: 0.1.0
+version: 0.1.1
 maintainers:
   - name: eslizn
     url: https://github.com/eslizn

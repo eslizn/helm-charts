@@ -9,13 +9,18 @@ declared in options.inbounds, all pointing at the main service port. The match
 and the service reference are chart specific, so they stay here instead of in
 the shared library.
 
+Inbounds that are not REALITY (no streamSettings.realitySettings.serverNames,
+say a Trojan or a plain TLS vless inbound) are skipped: dig resolves the missing
+keys to an empty list, where writing the path out would abort the render with
+"nil pointer evaluating interface {}.streamSettings".
+
 Usage: include "xtls.ingressRouteTCPRoutes" .
 */}}
 {{- define "xtls.ingressRouteTCPRoutes" -}}
 {{- $fullname := include "common.fullname" . -}}
 {{- $port := .Values.service.main.port -}}
 {{- range .Values.options.inbounds }}
-{{- range .streamSettings.realitySettings.serverNames }}
+{{- range dig "streamSettings" "realitySettings" "serverNames" (list) . }}
 - match: HostSNI(`{{ . }}`)
   services:
     - name: {{ $fullname }}

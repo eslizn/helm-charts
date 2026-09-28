@@ -6,7 +6,13 @@ replicaCount: 1
 
 image:
   repository: shadowsocks/shadowsocks-libev
-  tag: "latest"
+  # Empty falls back to Chart.yaml appVersion (v3.3.5). Pinned on purpose: this
+  # Docker Hub image is the last build published for the libev line, and its
+  # `latest` tag is older still (2020-06, before v3.3.5). The project has since
+  # been renamed to shadowsocks-c, whose image
+  # (ghcr.io/shadowsocks/shadowsocks-c) is built FROM scratch, runs a config
+  # file instead of the env vars below, and is not anonymously pullable.
+  tag: ""
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
@@ -74,8 +80,9 @@ kcptun:
     #   secretName: ""
     #   passwordKey: password
   image:
-    repository: xtaci/kcptun
-    tag: "v20210103"
+    # The Docker Hub repo xtaci/kcptun is gone; upstream publishes to ghcr.io.
+    repository: ghcr.io/xtaci/kcptun
+    tag: "v20260204"
     pullPolicy: IfNotPresent
   resources: {}
   securityContext: {}

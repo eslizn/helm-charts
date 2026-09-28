@@ -1,3 +1,0 @@
-{{- include "common.deployment" (dict
-      "ctx" $
-      "envFrom" (list (dict "configMapRef" (dict "name" (include "octopus.configMapName" $))))) }}

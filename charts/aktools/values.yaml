@@ -5,9 +5,18 @@
 replicaCount: 1
 
 image:
+  # Not an upstream image: akfamily publishes aktools to PyPI only, so this is
+  # built from the Dockerfile in the upstream repository with the aktools
+  # version pinned, and pushed here. Rebuild for a new release with:
+  #   curl -sO https://raw.githubusercontent.com/akfamily/aktools/master/Dockerfile
+  #   sed -i '' 's/aktools -i/aktools==<aktools version> -i/' Dockerfile
+  #   docker buildx build --platform linux/amd64,linux/arm64 \
+  #     -t eslizn/aktools:<aktools version> --push .
   repository: docker.io/eslizn/aktools
-  tag: latest
-  pullPolicy: Always
+  # Empty falls back to Chart.yaml appVersion: the aktools release the image was
+  # built from.
+  tag: ""
+  pullPolicy: IfNotPresent
 
 imagePullSecrets: []
 nameOverride: ""

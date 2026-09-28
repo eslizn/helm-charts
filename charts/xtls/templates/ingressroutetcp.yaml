@@ -1,4 +1,9 @@
+{{- /* The routes come from the REALITY serverNames, so with none declared there
+       is nothing to route: an IngressRouteTCP with an empty routes list would be
+       rejected by the CRD, so the resource is skipped instead. */ -}}
 {{- if .Values.ingress.traefik }}
+{{- $routes := include "xtls.ingressRouteTCPRoutes" . | trim }}
+{{- if $routes }}
 apiVersion: traefik.io/v1alpha1
 kind: IngressRouteTCP
 metadata:
@@ -9,7 +14,8 @@ spec:
   entryPoints:
     {{- toYaml .Values.ingress.entryPoints | nindent 4 }}
   routes:
-    {{- include "xtls.ingressRouteTCPRoutes" . | trim | nindent 4 }}
+    {{- $routes | nindent 4 }}
   tls:
     passthrough: true
+{{- end }}
 {{- end }}

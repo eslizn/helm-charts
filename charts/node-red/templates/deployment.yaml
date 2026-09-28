@@ -1,0 +1,124 @@
+{{- $userDir := .Values.nodeRed.userDir | default "/data" -}}
+{{- $settingsKey := .Values.nodeRed.settingsKey | default "settings.js" -}}
+{{- $extraNodes := .Values.nodeRed.extraNodes | default list -}}
+{{- $persistence := .Values.persistence | default dict -}}
+{{- $persistenceMount := $persistence.mountPath | default "/data" -}}
+
+{{- /* The install initContainer and the main container have to agree on where
+       the user directory is; a mismatch would install the palette nodes
+       somewhere Node-RED never scans, silently. */ -}}
+{{- if and $persistence.enabled (ne $persistenceMount $userDir) -}}
+{{- fail (printf "node-red: persistence.mountPath (%s) must equal nodeRed.userDir (%s)" $persistenceMount $userDir) -}}
+{{- end -}}
+
+{{- /* This chart only renders common.deployment. A StatefulSet value would be
+       ignored *and* silently stop the PVC from being mounted, because the
+       library assumes a StatefulSet uses claim templates. */ -}}
+{{- if and .Values.workload.kind (ne .Values.workload.kind "Deployment") -}}
+{{- fail (printf "node-red: workload.kind must be Deployment, got %s" .Values.workload.kind) -}}
+{{- end -}}
+
+{{- /* envFrom. Passing it replaces the values-provided list, so the chart's own
+       ConfigMap/Secret come first and workload.envFrom is appended after. */ -}}
+{{- $envFrom := list -}}
+{{- if .Values.env -}}
+{{- $envFrom = append $envFrom (dict "configMapRef" (dict "name" (include "node-red.envConfigMapName" .))) -}}
+{{- end -}}
+{{- if or .Values.secret.create .Values.secret.existingSecret -}}
+{{- $envFrom = append $envFrom (dict "secretRef" (dict "name" (include "node-red.secretName" .))) -}}
+{{- end -}}
+{{- range (.Values.workload.envFrom | default list) -}}
+{{- $envFrom = append $envFrom . -}}
+{{- end -}}
+
+{{- /* volumes/volumeMounts/initContainers are passed too, so the same caveat
+       applies: start from what the user listed in workload.* and append. */ -}}
+{{- $volumes := deepCopy (.Values.workload.volumes | default list) -}}
+{{- $volumeMounts := deepCopy (.Values.workload.volumeMounts | default list) -}}
+{{- $initContainers := deepCopy (.Values.workload.initContainers | default list) -}}
+
+{{- /* settings.js, mounted as a single file so it sits next to flows.json and
+       node_modules in the user directory. subPath does not shadow the rest of
+       the directory, which matters when the user directory is a volume. */ -}}
+{{- if include "node-red.settingsMountEnabled" . -}}
+{{- $volumes = append $volumes (dict "name" "settings" "configMap" (dict
+      "name" (include "node-red.settingsConfigMapName" .)
+      "items" (list (dict "key" $settingsKey "path" $settingsKey)))) -}}
+{{- $volumeMounts = append $volumeMounts (dict
+      "name" "settings"
+      "mountPath" (printf "%s/%s" $userDir $settingsKey)
+      "subPath" $settingsKey
+      "readOnly" true) -}}
+{{- end -}}
+
+{{- /* Palette nodes. An initContainer's write layer is not visible to the main
+       container, so the user directory has to be a volume shared by both: the
+       PVC when persistence is on, an emptyDir otherwise (in which case the
+       install repeats on every start — the marker file lives on that volume). */ -}}
+{{- if $extraNodes -}}
+{{- $dataVolumeName := "node-red-data" -}}
+{{- if $persistence.enabled -}}
+{{- $dataVolumeName = $persistence.volumeName | default "data" -}}
+{{- else -}}
+{{- $volumes = append $volumes (dict "name" $dataVolumeName "emptyDir" (dict)) -}}
+{{- $volumeMounts = append $volumeMounts (dict "name" $dataVolumeName "mountPath" $userDir) -}}
+{{- end -}}
+{{- /* Single quotes, with embedded quotes escaped, rather than %q: a
+       double-quoted spec would still let the shell expand $VAR, which is a
+       plausible thing to have in a credentialed git URL. */ -}}
+{{- $specs := list -}}
+{{- range $extraNodes -}}
+{{- $specs = append $specs (printf "'%s'" (. | replace "'" "'\\''")) -}}
+{{- end -}}
+{{- /* The marker is keyed on the specs *and* the image: a cached user directory
+       makes restarts cheap and changing extraNodes reinstalls, while a new
+       Node major version has to rebuild native modules even though the specs
+       did not change. The marker name ends up in the pod spec, so a change
+       here also rolls the pod (an initContainer only runs on pod start). */ -}}
+{{- $marker := printf ".node-red-nodes-%s" (printf "%s\n%s" (include "common.image" $) ($extraNodes | toJson) | sha256sum | trunc 16) -}}
+{{- $script := list
+      "set -e"
+      (printf "cd %s" $userDir)
+      (printf "if [ -f %s ]; then echo 'extraNodes unchanged, skipping npm install'; exit 0; fi" $marker)
+      (printf "npm install --no-audit --no-fund %s" (join " " $specs))
+      (printf "touch %s" $marker)
+      | join "\n" -}}
+{{- /* The installer has to mount the same slice of the claim as the main
+       container, otherwise it installs at the volume root while Node-RED reads
+       persistence.subPath — silently. */ -}}
+{{- $installMount := dict "name" $dataVolumeName "mountPath" $userDir -}}
+{{- if $persistence.subPath -}}
+{{- $_ := set $installMount "subPath" $persistence.subPath -}}
+{{- end -}}
+{{- $initContainers = append $initContainers (dict
+      "name" "install-nodes"
+      "image" (include "common.image" $)
+      "imagePullPolicy" (.Values.image.pullPolicy | default "IfNotPresent")
+      "command" (list "sh" "-c")
+      "args" (list $script)
+      "volumeMounts" (list $installMount)) -}}
+{{- end -}}
+
+{{- /* Roll the pod whenever the rendered configuration changes. Without this an
+       edit to settings/env/secret only rewrites the ConfigMap or Secret:
+       envFrom is read once at process start and a subPath mount never
+       refreshes, so Node-RED would keep running the old configuration until
+       something else happened to restart it (and under ArgoCD nothing else
+       would). Passing podAnnotations replaces the values-provided map, hence
+       the deepCopy. */ -}}
+{{- $podAnnotations := deepCopy (.Values.podAnnotations | default dict) -}}
+{{- $_ := set $podAnnotations "checksum/node-red-config" (list
+      (.Values.nodeRed.settings | default "")
+      (.Values.nodeRed.existingSettingsConfigMap | default "")
+      (.Values.env | default dict | toJson)
+      (.Values.secret.existingSecret | default "")
+      (.Values.secret.data | default dict | toJson)
+      | join "\n" | sha256sum) -}}
+
+{{- include "common.deployment" (dict
+      "ctx" $
+      "envFrom" $envFrom
+      "volumes" $volumes
+      "volumeMounts" $volumeMounts
+      "initContainers" $initContainers
+      "podAnnotations" $podAnnotations) }}

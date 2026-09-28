@@ -21,6 +21,7 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 | [aktools](charts/aktools) | 0.2.0 | AKTools - HTTP API for A-share market data |
 | [influxdb](charts/influxdb) | 2.0.0 | InfluxDB 3 Core with the optional InfluxDB 3 Explorer UI |
 | [mindsdb](charts/mindsdb) | 2.0.0 | MindsDB - AI layer over your database |
+| [node-red](charts/node-red) | 0.1.0 | Node-RED - low-code programming for event-driven applications |
 | [octopus](charts/octopus) | 0.1.0 | Octopus service |
 | [openclaw](charts/openclaw) | 0.2.0 | OpenClaw gateway |
 | [picoclaw](charts/picoclaw) | 0.1.0 | PicoClaw - ultra-lightweight personal AI assistant (Web console + gateway) |

@@ -1,0 +1,13 @@
+{{/* settings.js written inline in values. Skipped when the user points at a
+       ConfigMap they manage themselves. */}}
+{{- if and .Values.nodeRed.settings (not .Values.nodeRed.existingSettingsConfigMap) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "node-red.settingsConfigMapName" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  {{ .Values.nodeRed.settingsKey | default "settings.js" }}: |
+    {{- .Values.nodeRed.settings | nindent 4 }}
+{{- end }}

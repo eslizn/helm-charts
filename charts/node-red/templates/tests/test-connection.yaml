@@ -1,0 +1,31 @@
+{{/*
+Chart local instead of common.testConnection: that one runs a bare
+`wget <svc>:<port>`, which treats anything but a 2xx as a failure. Node-RED
+answers 302 (or 401) on / as soon as settings.js configures adminAuth, which is
+the normal setup for anything reachable — so this test only asserts that the
+HTTP layer answers at all.
+*/}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "common.fullname" . }}-test-connection"
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['sh', '-c']
+      args:
+        - |
+          url="http://{{ include "common.fullname" . }}:{{ .Values.service.main.port }}/"
+          if out=$(wget -O /dev/null "$url" 2>&1); then
+            echo "$url answered"
+            exit 0
+          fi
+          echo "$out"
+          echo "$out" | grep -qE 'HTTP/[0-9.]+ (30[0-9]|401)' && echo "$url answered (redirect/auth)" && exit 0
+          exit 1
+  restartPolicy: Never

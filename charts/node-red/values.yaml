@@ -1,0 +1,131 @@
+# Default values for node-red.
+# The schema is shared by every chart in this repository: see
+# ../common/templates/_helpers.tpl and the repository README.
+#
+# This chart runs the official image (nodered/node-red). Node-RED's user
+# directory holds everything stateful (flows, credentials, palette nodes); the
+# chart can layer app specific bits on top at startup — settings.js and extra
+# palette nodes, see the nodeRed section below.
+
+replicaCount: 1
+
+image:
+  repository: nodered/node-red
+  # Empty falls back to Chart.yaml appVersion, which is the upstream image tag.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext: {}
+# The official image runs as uid/gid 1000 (node-red) and writes to its user
+# directory, so this is left empty by default.
+securityContext: {}
+
+# Non-secret environment variables, rendered into a ConfigMap and injected with
+# envFrom. Credentials belong in the secret section below.
+env: {}
+
+# Credentials, rendered into a Secret and injected with envFrom.
+# create=false and existingSecret="" means no Secret is rendered or referenced.
+secret:
+  create: false
+  existingSecret: ""
+  data: {}
+
+# Container level configuration.
+workload:
+  kind: Deployment
+  ports:
+    - name: http
+      containerPort: 1880
+      protocol: TCP
+
+# Named services: "main" is rendered as <fullname>, other keys as <fullname>-<key>.
+service:
+  main:
+    type: ClusterIP
+    port: 1880
+    targetPort: http
+    portName: http
+
+ingress:
+  enabled: false
+  className: "traefik"
+  annotations: {}
+  hosts:
+    - host: node-red.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources: {}
+
+# Node-RED keeps flows, credentials and palette nodes in its user directory, so
+# this is on by default. It is RWO: replicaCount > 1 needs a RWX volume and
+# nodes sharing that state. Also required when nodeRed.extraNodes is set.
+persistence:
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  # Must equal nodeRed.userDir — the chart refuses to render otherwise, see the
+  # README.
+  mountPath: /data
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Node-RED specific configuration.
+nodeRed:
+  # Node-RED's user directory: flows.json, flows_cred.json and node_modules.
+  #
+  # The official image hardcodes /data in its entrypoint
+  # (`... red.js --userDir /data $FLOWS "$@"`), so leave this at /data unless
+  # you bring your own image. Note the corollary: overriding workload.command
+  # bypasses that entrypoint and with it the --userDir flag, which would leave
+  # Node-RED reading a directory nothing is mounted into.
+  userDir: /data
+
+  # settings.js. Either inline it (settings) or point at a ConfigMap you manage
+  # yourself (existingSettingsConfigMap). Leaving both empty keeps the image's
+  # default settings, which is fine for a plain Node-RED with no auth.
+  # The file is mounted read-only at <userDir>/<settingsKey> with subPath, and
+  # Node-RED picks it up from there without any --settings flag.
+  settings: ""
+  existingSettingsConfigMap: ""
+  settingsKey: settings.js
+
+  # Extra palette nodes, as npm specs: "node-red-contrib-foo",
+  # "node-red-contrib-bar@1.2.3", a git URL, ... They are installed into
+  # <userDir>/node_modules by an initContainer, which is where Node-RED scans
+  # for nodes — and also where a require() inside settings.js resolves from.
+  #
+  # This needs <userDir> to be a volume shared with the main container:
+  # enable persistence (recommended), or the chart adds an emptyDir (installed
+  # again on every start). An initContainer's writes are never visible to the
+  # main container otherwise.
+  #
+  # The install container runs after workload.initContainers, so a staging
+  # container of yours can lay down files this list refers to. The reverse —
+  # running something *after* the install — is not supported.
+  extraNodes: []

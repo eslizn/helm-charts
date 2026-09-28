@@ -1,0 +1,32 @@
+Node-RED {{ .Chart.AppVersion }} is deployed.
+
+1. Open the editor:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+   http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}{{ (first .paths).path }}
+{{- end }}
+{{- else }}
+   kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "common.fullname" . }} 1880:{{ .Values.service.main.port }}
+   then open http://127.0.0.1:1880
+{{- end }}
+
+2. Flows, credentials and palette nodes live in {{ .Values.nodeRed.userDir }}:
+{{- if .Values.persistence.enabled }}
+   backed by the {{ include "common.fullname" . }} PVC ({{ .Values.persistence.size }}), so they survive a restart.
+{{- else }}
+   NOT persisted — the container filesystem is discarded on restart. Set
+   persistence.enabled=true to keep flows, or have settings.js store them elsewhere.
+{{- end }}
+{{- if .Values.nodeRed.extraNodes }}
+
+   Extra palette nodes installed by an initContainer at startup:
+{{- range .Values.nodeRed.extraNodes }}
+   - {{ . }}
+{{- end }}
+{{- end }}
+{{- if not (include "node-red.settingsMountEnabled" .) }}
+
+3. No settings.js is mounted, so Node-RED runs its built-in defaults — which
+   means NO authentication on the editor. Set nodeRed.settings or
+   nodeRed.existingSettingsConfigMap before exposing this beyond the cluster.
+{{- end }}

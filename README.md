@@ -16,14 +16,19 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 
 ## Charts
 
-| Chart | Version | Description |
-|-------|---------|-------------|
-| [aktools](charts/aktools) | 0.2.1 | AKTools - HTTP API for A-share market data |
-| [mindsdb](charts/mindsdb) | 2.0.1 | MindsDB - AI layer over your database |
-| [node-red](charts/node-red) | 0.1.1 | Node-RED - low-code programming for event-driven applications |
-| [shadowsocks](charts/shadowsocks) | 2.0.1 | shadowsocks-libev server |
-| [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.1 | shadowsocks-rust server |
-| [xtls](charts/xtls) | 2.0.1 | Xray-core VLESS/REALITY proxy |
+| Chart | Version | App version | Description |
+|-------|---------|-------------|-------------|
+| [aktools](charts/aktools) | 0.2.1 | 0.0.91 | AKTools - HTTP API for A-share market data |
+| [mindsdb](charts/mindsdb) | 2.0.1 | v26.1.0 | MindsDB - AI layer over your database |
+| [node-red](charts/node-red) | 0.1.1 | 5.0.7-24 | Node-RED - low-code programming for event-driven applications |
+| [shadowsocks](charts/shadowsocks) | 2.0.1 | v3.3.5 | shadowsocks-libev server |
+| [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.1 | v1.25.0 | shadowsocks-rust server |
+| [xtls](charts/xtls) | 2.0.1 | 26.3.27 | Xray-core VLESS/REALITY proxy |
+
+`Version` is the chart artifact version (bumped on every chart change, the
+number `chart-releaser` publishes under), `App version` is the upstream release
+the chart deploys - it is the image tag the chart pins, so the two only move
+together when a release changes both.
 
 `charts/common` is a library chart (not installable): it holds the shared named
 templates every chart includes.

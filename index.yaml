@@ -135,6 +135,27 @@ entries:
   mindsdb:
   - apiVersion: v2
     appVersion: v26.1.0
+    created: "2026-09-28T17:37:02.672956899Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.1
+    description: MindsDB - AI layer over your database (https://github.com/mindsdb/mindsdb)
+    digest: 8f364884ebf741c066c9c6afcb68d0498f5689eec39ff6048b663b6454c97377
+    home: https://mindsdb.com
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: mindsdb
+    sources:
+    - https://github.com/mindsdb/mindsdb
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/mindsdb-2.0.2/mindsdb-2.0.2.tgz
+    version: 2.0.2
+  - apiVersion: v2
+    appVersion: v26.1.0
     created: "2026-09-28T16:39:35.299504374Z"
     dependencies:
     - name: common
@@ -837,4 +858,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-09-28T16:39:35.857099812Z"
+generated: "2026-09-28T17:37:02.6731386Z"

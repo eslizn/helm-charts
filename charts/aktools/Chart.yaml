@@ -2,7 +2,7 @@ apiVersion: v2
 name: aktools
 description: AKTools - HTTP API for A-share market data (https://github.com/akfamily/aktools)
 type: application
-version: 0.2.1
+version: 0.2.2
 appVersion: "0.0.91"
 kubeVersion: ">=1.24.0-0"
 home: https://github.com/akfamily/aktools

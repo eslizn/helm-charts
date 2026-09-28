@@ -5,13 +5,23 @@
 replicaCount: 1
 
 image:
-  # Not an upstream image: akfamily publishes aktools to PyPI only, so this is
-  # built from the Dockerfile in the upstream repository with the aktools
-  # version pinned, and pushed here. Rebuild for a new release with:
-  #   curl -sO https://raw.githubusercontent.com/akfamily/aktools/master/Dockerfile
-  #   sed -i '' 's/aktools -i/aktools==<aktools version> -i/' Dockerfile
-  #   docker buildx build --platform linux/amd64,linux/arm64 \
-  #     -t eslizn/aktools:<aktools version> --push .
+  # Not an upstream image: akfamily publishes aktools to PyPI only, so the
+  # image is built here, from the context in image/. Every dependency is pinned
+  # in image/requirements.txt, because the upstream Dockerfile installs them
+  # all with `--upgrade` and no constraints - and that is what broke the
+  # homepage: fastapi declares only `starlette>=0.46.0`, so an unconstrained
+  # resolve takes starlette 1.x, whose TemplateResponse dropped the
+  # (name, context) signature aktools 0.0.91 still calls (HTTP 500 on /).
+  #
+  # Rebuild from the repository root:
+  #   make images.aktools          # tag defaults to appVersion, below
+  #
+  # Pushing over the tag that is already deployed rolls nothing: the rendered
+  # manifest is unchanged, so Argo CD sees no diff, and a node holding the old
+  # image under that tag will not pull again under IfNotPresent. After such a
+  # push, drop the cached image on every node that runs it - kubectl debug
+  # node/<node>, then `crictl rmi docker.io/eslizn/aktools:<tag>` - and delete
+  # the Pod so it is recreated and re-pulls.
   repository: docker.io/eslizn/aktools
   # Empty falls back to Chart.yaml appVersion: the aktools release the image was
   # built from.

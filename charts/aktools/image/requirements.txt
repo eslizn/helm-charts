@@ -1,0 +1,66 @@
+# Full dependency lock for the aktools image, taken with `pip freeze` from a
+# container of this image that was verified working (homepage / and /version
+# both HTTP 200).
+#
+# Everything is pinned on purpose. The upstream Dockerfile installs every
+# dependency with `--upgrade` and no constraints, so a rebuild silently picks
+# up whatever PyPI serves that day - which is how the homepage broke: fastapi
+# declares only `starlette>=0.46.0`, an unconstrained resolve took starlette
+# 1.x, and 1.x removed the TemplateResponse(name, context) signature that
+# aktools 0.0.91 still calls (see charts/aktools/values.yaml).
+#
+# To regenerate for a new aktools release: bump aktools below, rebuild, verify
+# the homepage, then re-freeze with
+#   docker run --rm <image> pip freeze | grep -v '^aktools=='
+
+akracer==0.0.14
+akshare==1.18.97
+aktools==0.0.91
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.15.1
+beautifulsoup4==4.15.0
+certifi==2026.7.22
+cffi==2.1.1
+charset-normalizer==3.5.1
+click==8.5.0
+curl_cffi==0.16.3
+decorator==5.3.1
+et_xmlfile==2.0.0
+fastapi==0.141.1
+gunicorn==26.2.0
+h11==0.16.0
+html5lib==1.1
+idna==3.20
+Jinja2==3.1.6
+jsonpath==0.82.2
+lxml==6.1.3
+markdown-it-py==4.2.0
+MarkupSafe==3.0.3
+mdurl==0.1.2
+numpy==2.5.3
+openpyxl==3.1.5
+pandas==3.0.6
+py-mini-racer==0.6.0
+pycparser==3.0
+pydantic==2.13.5
+pydantic_core==2.46.5
+Pygments==2.21.0
+python-dateutil==2.9.0.post0
+python-multipart==0.0.32
+requests==2.34.2
+rich==15.0.0
+shellingham==1.5.4
+six==1.17.0
+soupsieve==2.9.2
+# Held below 1.0: aktools 0.0.91 calls TemplateResponse the pre-1.0 way.
+starlette==0.52.1
+tabulate==0.10.0
+tqdm==4.70.1
+typer==0.27.2
+typing-inspection==0.4.4
+typing_extensions==4.16.0
+urllib3==2.8.0
+uvicorn==0.53.0
+webencodings==0.6.1
+xlrd==2.0.2

@@ -21,3 +21,7 @@
 .idea/
 *.tmproj
 .vscode/
+# Build context for the self-built image (see the repository README). Without
+# this line helm package ships the Dockerfile and the dependency lock inside
+# the released chart.
+image/

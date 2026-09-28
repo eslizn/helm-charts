@@ -1,15 +1,24 @@
+{{- /* The chart's own env vars are appended to workload.env, never substituted
+       for it: passing "env" to common.deployment replaces the values' list
+       entirely (common.container does `with .env | default $w.env`), so building
+       this list from scratch silently dropped everything the user set -
+       MINDSDB_USERNAME/MINDSDB_PASSWORD among them, i.e. auth stayed off while
+       the HTTP API was exposed. concat gives a fresh list to append to instead of
+       appending to the one in .Values. */ -}}
 {{- $persistence := .Values.persistence -}}
-{{- $env := list -}}
+{{- $env := concat (list) (.Values.workload.env | default list) -}}
 {{- $volumes := list -}}
 {{- $volumeMounts := list -}}
 {{- if $persistence.enabled -}}
 {{- $env = append $env (dict "name" "MINDSDB_STORAGE_DIR" "value" $persistence.mountPath) -}}
 {{- $env = append $env (dict "name" "MINDSDB_CONFIG_FILE" "value" $persistence.configMountPath) -}}
+{{- $volumes = list (dict "name" "config" "configMap" (dict "name" (include "common.fullname" .))) -}}
+{{- $volumeMounts = list (dict "name" "config" "mountPath" $persistence.configMountPath) -}}
+{{- end -}}
+{{- /* GPU access is independent of persistence, so it is not nested inside that
+       branch either. */ -}}
 {{- if eq .Values.runtimeClass "nvidia" -}}
 {{- $env = append $env (dict "name" "NVIDIA_VISIBLE_DEVICES" "value" "all") -}}
 {{- $env = append $env (dict "name" "NVIDIA_DRIVER_CAPABILITIES" "value" "all") -}}
-{{- end -}}
-{{- $volumes = list (dict "name" "config" "configMap" (dict "name" (include "common.fullname" .))) -}}
-{{- $volumeMounts = list (dict "name" "config" "mountPath" $persistence.configMountPath) -}}
 {{- end -}}
 {{- include "common.deployment" (dict "ctx" $ "env" $env "volumes" $volumes "volumeMounts" $volumeMounts "runtimeClassName" .Values.runtimeClass) }}

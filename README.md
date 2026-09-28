@@ -19,7 +19,7 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 | Chart | Version | App version | Description |
 |-------|---------|-------------|-------------|
 | [aktools](charts/aktools) | 0.2.1 | 0.0.91 | AKTools - HTTP API for A-share market data |
-| [mindsdb](charts/mindsdb) | 2.0.1 | v26.1.0 | MindsDB - AI layer over your database |
+| [mindsdb](charts/mindsdb) | 2.0.2 | v26.1.0 | MindsDB - AI layer over your database |
 | [node-red](charts/node-red) | 0.1.1 | 5.0.7-24 | Node-RED - low-code programming for event-driven applications |
 | [shadowsocks](charts/shadowsocks) | 2.0.1 | v3.3.5 | shadowsocks-libev server |
 | [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.1 | v1.25.0 | shadowsocks-rust server |
@@ -129,6 +129,13 @@ The `Lint Charts` workflow runs `helm lint --strict`, `helm template` and
 
 ## Version history notes
 
+- **2026-09-29** - `mindsdb` 2.0.2: the chart now appends its own environment
+  variables (the persistence `MINDSDB_STORAGE_DIR`/`MINDSDB_CONFIG_FILE` pair and
+  the `nvidia` runtime class ones) to `workload.env` instead of building that
+  list from scratch. Passing `env` to `common.deployment` replaces the values'
+  list entirely, so until 2.0.1 anything set in `workload.env` was silently
+  dropped whenever persistence was enabled - `MINDSDB_USERNAME`/`MINDSDB_PASSWORD`
+  included, which left the HTTP API unauthenticated while it was exposed.
 - **2026-09** - all charts moved into `charts/` and onto the shared
   `charts/common` library; `service` became a named-service map, `persistent`
   was renamed to `persistence`, and the `helm create` placeholder `appVersion`

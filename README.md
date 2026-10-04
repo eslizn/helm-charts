@@ -18,7 +18,7 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 
 | Chart | Version | App version | Description |
 |-------|---------|-------------|-------------|
-| [aktools](charts/aktools) | 0.2.2 | 0.0.91 | AKTools - HTTP API for A-share market data |
+| [aktools](charts/aktools) | 0.2.3 | 0.0.91 | AKTools - HTTP API for A-share market data |
 | [mindsdb](charts/mindsdb) | 2.0.2 | v26.1.0 | MindsDB - AI layer over your database |
 | [node-red](charts/node-red) | 0.1.1 | 5.0.7-24 | Node-RED - low-code programming for event-driven applications |
 | [shadowsocks](charts/shadowsocks) | 2.0.1 | v3.3.5 | shadowsocks-libev server |
@@ -125,33 +125,38 @@ self-built image keeps its build context in `charts/<chart>/image/` and is built
 from the repository root:
 
 ```bash
-make images.<chart>             # tag defaults to the chart's appVersion
+make images.<chart>             # tag from values.yaml image.tag
 make images.<chart> TAG=<tag>   # override the tag
 ```
 
-The tag has to match the chart's `Chart.yaml` `appVersion`: `image.tag` is
-empty in `values.yaml` and `common.imageRef` falls back to `appVersion`. Both
+The tag is the chart's `values.yaml` `image.tag`, which is what the deployment
+renders (`common.imageRef` prefers it over `appVersion`), so the pushed image
+and the deployed reference cannot drift; when it is empty the tag falls back to
+`Chart.yaml` `appVersion`. A self-built image is tagged `<appVersion>-<rev>`
+(for example `0.0.91-1`): reusing a tag would roll nothing, because the
+rendered manifest is unchanged, Argo CD sees no diff, and a node that cached
+the image under that tag does not pull again under `IfNotPresent` - bumping the
+revision instead gives the rebuild a new tag, which rolls on its own. Both
 platforms are built (`linux/amd64,linux/arm64`) because the cluster is amd64 +
 arm64 mixed. `charts/<chart>/.helmignore` has to exclude `image/`, or
 `helm package` ships the build context inside the released chart.
 
-Pushing over a tag that is already deployed rolls nothing: the rendered
-manifest is unchanged, so Argo CD sees no diff, and a node that cached the old
-image under that tag will not pull again under `IfNotPresent`. After such a
-push, drop the cached image on every node running it, then delete the Pod so it
-is recreated and re-pulls:
+The `Build Images` workflow runs this same target in CI on every push to
+`master` that touches `charts/*/image/**`, one job per changed chart; a rebuild
+with nothing changed under `image/` is started by hand with `workflow_dispatch`.
+It needs the `DOCKERHUB_USERNAME` and `DOCKERHUB_PASSWORD` repository secrets.
+The password field takes the account password or a personal access token;
+Docker Hub rejects the account password when the account has 2FA enabled or the
+organization enforces SSO, and a token is scoped and revocable where the
+password is not - use a token in either case.
 
-```bash
-kubectl debug node/<node> -it --image=busybox
-# inside the debug container the host root is mounted at /host
-chroot /host crictl rmi docker.io/eslizn/<image>:<tag>
-```
-
-An image-only change still counts as a chart change to chart-releaser: it
-truncates `charts/<chart>/image/requirements.txt` to `charts/<chart>` when
-deciding what to package, so the release workflow would rebuild the current
-version and try to publish it again, which GitHub rejects. Bump `Chart.yaml`
-`version` in the same commit as any change under `image/`.
+Every change under `image/` has to bump `image.tag` in `values.yaml` and
+`version` in `Chart.yaml` in the same commit: the tag is what rolls the
+workload, the version is what makes chart-releaser publish the chart. The
+latter is not optional - chart-releaser truncates
+`charts/<chart>/image/requirements.txt` to `charts/<chart>` when deciding what
+to package, so an image-only commit would rebuild the current version and try
+to publish it again, which GitHub rejects.
 
 `charts/aktools` is the only chart that builds an image today.
 
@@ -165,10 +170,22 @@ version and try to publish it again, which GitHub rejects. Bump `Chart.yaml`
    chart, uploads the new versions, and updates the `gh-pages` index).
 
 The `Lint Charts` workflow runs `helm lint --strict`, `helm template` and
-`helm package` on every push and pull request.
+`helm package` on every push and pull request; `Build Images` builds and pushes
+the image of every chart whose `charts/*/image/**` changed. Those two run in
+parallel, so an image change and its version bump landing in the same commit
+can publish the chart a moment before the image it pins exists - a pull inside
+that window fails and is retried by the kubelet.
 
 ## Version history notes
 
+- **2026-10-04** - images are built and pushed by the `Build Images` workflow
+  instead of by hand: on every push to `master` that touches
+  `charts/*/image/**` it runs `make images.<chart>` (the same target as a local
+  build) once per changed chart. `aktools` moves to tag `0.0.91-1`: the image
+  tag is now `<appVersion>-<rev>`, with the revision bumped in the same commit
+  as any image change. Rebuilding under the deployed `0.0.91` tag rolled
+  nothing and needed the node image cache cleared by hand; a fresh tag per
+  build makes the rollout automatic, so that manual step is gone.
 - **2026-09-29** - `aktools`: the image build is now version controlled. Its
   build context lives in `charts/aktools/image/` and is built with
   `make images.aktools` from the repository root, with every dependency pinned
@@ -177,8 +194,9 @@ The `Lint Charts` workflow runs `helm lint --strict`, `helm template` and
   the image had resolved `starlette` 1.x, which dropped the
   `TemplateResponse(name, context)` signature that aktools 0.0.91 still calls -
   `GET /` answered HTTP 500. The image is rebuilt under the same `0.0.91` tag,
-  so putting it into service means clearing the node image cache by hand; the
-  `## Building images` section above explains why and how.
+  so putting it into service means clearing the node image cache by hand
+  (superseded on 2026-10-04 - tags are no longer reused, so a rebuild rolls on
+  its own).
 - **2026-09-29** - `mindsdb` 2.0.2: the chart now appends its own environment
   variables (the persistence `MINDSDB_STORAGE_DIR`/`MINDSDB_CONFIG_FILE` pair and
   the `nvidia` runtime class ones) to `workload.env` instead of building that

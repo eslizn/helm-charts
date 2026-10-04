@@ -1,0 +1,107 @@
+name: Build Images
+
+# Charts that ship a self-built image keep the build context in
+# charts/<chart>/image/ and the image tag in values.yaml image.tag. This
+# workflow runs the same entry point as a local build, `make images.<chart>`,
+# so the image it pushes is exactly the reference the chart deploys.
+#
+# Any change under image/ has to bump image.tag in values.yaml (the new tag is
+# what makes the rollout happen) and version in Chart.yaml (what makes
+# chart-releaser publish the chart) in the same commit. See the README.
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'charts/*/image/**'
+  # For a rebuild with nothing changed under image/ (an upstream base image
+  # refresh, for example): bump image.tag first, then dispatch this by hand.
+  workflow_dispatch:
+    inputs:
+      chart:
+        description: Chart to build (must have charts/<chart>/image/)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    outputs:
+      charts: ${{ steps.list.outputs.charts }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # The matrix comes from a git diff, which needs the commit
+          # github.event.before points at.
+          fetch-depth: 0
+
+      # Only the charts whose build context changed: a build takes minutes, so
+      # rebuilding every chart that has one would waste most of them.
+      - name: Compute the chart matrix
+        id: list
+        env:
+          EVENT: ${{ github.event_name }}
+          CHART: ${{ inputs.chart }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = 'workflow_dispatch' ]; then
+            charts="$(jq -cn --arg chart "$CHART" '[$chart]')"
+          else
+            case "$BEFORE" in
+              # All zeros on the first push of a branch: diff the tip commit.
+              0000000000000000000000000000000000000000) range='HEAD~1..HEAD' ;;
+              *) range="${BEFORE}..${SHA}" ;;
+            esac
+            changed="$(git diff --name-only "$range" -- 'charts/*/image/**' || true)"
+            if [ -n "$changed" ]; then
+              charts="$(printf '%s\n' "$changed" | cut -d/ -f2 | sort -u | jq -R . | jq -sc .)"
+            else
+              charts='[]'
+            fi
+          fi
+          echo "charts=$charts" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: select
+    if: needs.select.outputs.charts != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        chart: ${{ fromJSON(needs.select.outputs.charts) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # arm64 is emulated on the amd64 runner: the cluster is amd64 + arm64
+      # mixed, so both variants are built.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # The Makefile builds with `docker buildx build --platform ... --push`,
+      # which needs a container driver builder; the action provides one.
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          # The account password. This field takes a password or a personal
+          # access token; Docker Hub rejects the password when the account has
+          # 2FA enabled or the organization enforces SSO, and a token is
+          # scoped and revocable where the account password is not - put a
+          # token here if either applies.
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      # Same target as a local build: the tag comes from values.yaml, the
+      # repository and the platforms from the Makefile defaults.
+      - name: Build and push
+        run: make images.${{ matrix.chart }}

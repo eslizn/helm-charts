@@ -14,18 +14,22 @@ image:
   # (name, context) signature aktools 0.0.91 still calls (HTTP 500 on /).
   #
   # Rebuild from the repository root:
-  #   make images.aktools
+  #   make images.aktools          # tag defaults to appVersion, below
   #
-  # The Build Images workflow builds the same target on every push that touches
-  # image/, so a rebuild normally lands through CI (see the repository README).
+  # The Build Images workflow runs the same target on every push that touches
+  # image/ (see the repository README).
+  #
+  # Pushing over the tag that is already deployed rolls nothing: the rendered
+  # manifest is unchanged, so Argo CD sees no diff, and a node holding the old
+  # image under that tag will not pull again under IfNotPresent. After such a
+  # push, drop the cached image on every node that runs it - kubectl debug
+  # node/<node>, then `crictl rmi docker.io/eslizn/aktools:<tag>` - and delete
+  # the Pod so it is recreated and re-pulls.
   repository: docker.io/eslizn/aktools
-  # The image tag, <appVersion>-<rev>: the aktools release the image was built
-  # from plus a revision bumped in the same commit as any change under image/.
-  # A rebuild therefore takes a new tag instead of overwriting one that is
-  # already deployed, so the rendered manifest changes, Argo CD rolls the
-  # workload, and no node image cache has to be cleared by hand. The Makefile
-  # reads this value, so the pushed image and this reference cannot drift.
-  tag: "0.0.91-1"
+  # Empty falls back to Chart.yaml appVersion: the aktools release the image was
+  # built from. An image rebuild keeps that tag, so it needs the node image
+  # cache cleared by hand (above).
+  tag: ""
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

@@ -1,13 +1,16 @@
 name: Build Images
 
 # Charts that ship a self-built image keep the build context in
-# charts/<chart>/image/ and the image tag in values.yaml image.tag. This
-# workflow runs the same entry point as a local build, `make images.<chart>`,
-# so the image it pushes is exactly the reference the chart deploys.
+# charts/<chart>/image/ and are tagged with the chart's Chart.yaml appVersion.
+# This workflow runs the same entry point as a local build,
+# `make images.<chart>`, so the image it pushes is the reference the chart
+# deploys.
 #
-# Any change under image/ has to bump image.tag in values.yaml (the new tag is
-# what makes the rollout happen) and version in Chart.yaml (what makes
-# chart-releaser publish the chart) in the same commit. See the README.
+# Any change under image/ has to bump version in Chart.yaml in the same commit:
+# chart-releaser truncates image/... back to the chart directory when deciding
+# what changed. The tag does not change, so a rebuild under a tag that is
+# already deployed still needs the node image cache cleared by hand. See the
+# README.
 
 on:
   push:
@@ -16,7 +19,9 @@ on:
     paths:
       - 'charts/*/image/**'
   # For a rebuild with nothing changed under image/ (an upstream base image
-  # refresh, for example): bump image.tag first, then dispatch this by hand.
+  # refresh, for example), dispatch this by hand. The tag does not change, so
+  # such a push only reaches a node whose image cache is cleared first (see
+  # the README).
   workflow_dispatch:
     inputs:
       chart:
@@ -101,7 +106,7 @@ jobs:
           # token here if either applies.
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      # Same target as a local build: the tag comes from values.yaml, the
-      # repository and the platforms from the Makefile defaults.
+      # Same target as a local build: the tag comes from Chart.yaml appVersion,
+      # the repository and the platforms from the Makefile defaults.
       - name: Build and push
         run: make images.${{ matrix.chart }}

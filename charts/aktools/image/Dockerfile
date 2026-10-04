@@ -7,11 +7,11 @@
 # `starlette>=0.46.0`, so pip took starlette 1.x, and 1.x dropped the
 # TemplateResponse(name, context) signature aktools 0.0.91 still calls.
 #
-# Build and push with `make images.aktools` from the repository root: the tag
-# is values.yaml image.tag, and the Build Images workflow runs the same target
-# on every push that touches this directory. Any change here has to bump
-# image.tag (in values.yaml) and version (in Chart.yaml) in the same commit;
-# see the repository README.
+# Build and push with `make images.aktools` from the repository root (the tag
+# is Chart.yaml appVersion); the Build Images workflow runs the same target on
+# every push that touches this directory. Any change here still has to bump
+# version in Chart.yaml in the same commit - chart-releaser truncates image/...
+# back to the chart directory when deciding what changed. See the README.
 
 FROM python:3.13-slim-bullseye
 

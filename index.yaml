@@ -142,6 +142,29 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/common-0.1.0/common-0.1.0.tgz
     version: 0.1.0
+  futuopend:
+  - apiVersion: v2
+    appVersion: 10.11.7108
+    created: "2026-10-05T09:27:01.517720633Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.1
+    description: Futu OpenD - gateway for the Futu OpenAPI, one instance per trading
+      account (https://openapi.futunn.com/futu-api-doc/)
+    digest: 81a7f565713a15f6f0701b173ed1e73279d9c12a7adc13075cbc67876e413b5e
+    home: https://openapi.futunn.com/futu-api-doc/
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: futuopend
+    sources:
+    - https://openapi.futunn.com/futu-api-doc/
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/futuopend-0.1.0/futuopend-0.1.0.tgz
+    version: 0.1.0
   influxdb:
   - apiVersion: v2
     appVersion: v3.3.0
@@ -921,4 +944,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-04T14:18:20.553600606Z"
+generated: "2026-10-05T09:27:01.517879985Z"

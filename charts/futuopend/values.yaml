@@ -1,0 +1,220 @@
+# Default values for futuopend.
+# The schema is shared by every chart in this repository: see
+# ../common/templates/_helpers.tpl and the repository README.
+
+# One OpenD process serves exactly one Futu account, so this chart renders one
+# Deployment (plus Service, PVC, Secret) per entry of .values.accounts below.
+# replicaCount therefore only accepts 1: two Pods behind one account are two
+# concurrent logins of the same user, which Futu answers by kicking the quote
+# rights off one of them ("行情互踢" - only one terminal holds the top-tier
+# rights). The chart fails the render on any other value rather than silently
+# ignoring it. For two instances of the same account, list the account twice.
+replicaCount: 1
+
+image:
+  # Not an upstream image: Futu publishes no Docker image and no Helm chart
+  # (official FAQ: "OpenD 是否有提供 Docker 镜像? A: 目前没有提供"), so the image
+  # is built here from the context in image/.
+  #
+  # Rebuild from the repository root:
+  #   make images.futuopend        # tag defaults to appVersion, below
+  #
+  # The Build Images workflow runs the same target on every push that touches
+  # image/ (see the repository README).
+  #
+  # Pushing over the tag that is already deployed rolls nothing: the rendered
+  # manifest is unchanged, so Argo CD sees no diff, and a node holding the old
+  # image under that tag will not pull again under IfNotPresent. After such a
+  # push, drop the cached image on every node that runs it - kubectl debug
+  # node/<node>, then `crictl rmi docker.io/eslizn/futuopend:<tag>` - and delete
+  # the Pod so it is recreated and re-pulls.
+  repository: docker.io/eslizn/futuopend
+  # Empty falls back to Chart.yaml appVersion: the OpenD release the image was
+  # built from. An image rebuild keeps that tag, so it needs the node image
+  # cache cleared by hand (above).
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+# Applied to every account's Pod; accounts[].podAnnotations adds to it.
+podAnnotations: {}
+podLabels: {}
+# fsGroup matters: the PVC is mounted into a container that runs as
+# runAsUser/runAsGroup below, and kubelet only makes the volume group-writable
+# when a fsGroup is set. Without it OpenD cannot create its state directory.
+podSecurityContext:
+  fsGroup: 10001
+# Matches the futuopend image's own non-root user (uid/gid 10001).
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+resources: {}
+
+# Pinned to amd64 because that is the only architecture the image exists for -
+# Futu publishes no arm build, so a Pod that lands on an arm64 node dies with
+# "exec format error". It is a correctness default, not a preference; replace it
+# with a hostname/affinity if you want the account somewhere specific, or drop it
+# entirely on an amd64-only cluster. accounts[].nodeSelector deep-merges over it.
+nodeSelector:
+  kubernetes.io/arch: amd64
+tolerations: []
+affinity: {}
+
+# Deliberately absent from the shared schema, because neither can be expressed
+# meaningfully for this app:
+#   ingress    - the OpenD API is raw TCP carrying protobuf, not HTTP, so an
+#                Ingress cannot front it (and a trading gateway should not be
+#                published to the internet anyway). Publish an account outside
+#                the cluster with service.main.type NodePort/LoadBalancer.
+#   autoscaling - one OpenD process serves one account, so a second replica is a
+#                second concurrent login of the same user, which Futu answers by
+#                kicking the top quote rights off one of them.
+
+# Container level configuration, applied to every account.
+# accounts[].workload deep-merges over this, so a single account can, for
+# example, raise its probe timeouts without repeating the rest.
+workload:
+  # Only Deployment is supported: it is the one workload kind that can carry a
+  # per-account name and a Recreate rollout, and "one account, one process"
+  # rules out the other two (a StatefulSet with N replicas would run N
+  # identical Pods, a DaemonSet runs one per node). The chart fails the render
+  # on any other value.
+  kind: Deployment
+  # The API protocol is raw TCP carrying protobuf - not HTTP - so the probes are
+  # plain TCP connects. They prove the port is open, NOT that the account logged
+  # in successfully; a failed login still leaves the port listening. Use the
+  # log file on the PVC (persistence.mountPath + /log) to check the login.
+  livenessProbe:
+    tcpSocket:
+      port: api
+    periodSeconds: 20
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readinessProbe:
+    tcpSocket:
+      port: api
+    periodSeconds: 10
+    timeoutSeconds: 3
+  # A first login can require SMS verification on a new device, and Futu
+  # throttles how often OpenD may be started per hour
+  # ("IsAllowStartUpOpenD ... nOpenDStartUpMaxTimesPerHours" in the log), so the
+  # startup budget is generous: 5s x 60 = 5 minutes, and liveness/readiness stay
+  # out of the way until it succeeds.
+  startupProbe:
+    tcpSocket:
+      port: api
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 60
+
+# One PVC per account holding the state directory. Keep it: the device identity
+# lives in <mountPath>/F3CNN/Device.dat, and Futu ties device-lock verification
+# to it. Per the official FAQ a fresh Device.dat is a new device - it triggers
+# the SMS/captcha verification again and counts against the account's logged-in
+# device limit. Never share one Device.dat between accounts, and never bake one
+# into an image.
+persistence:
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  mountPath: /data
+  subPath: ""
+
+# Defaults for every account; accounts[].futuopend overrides per key.
+futuopend:
+  # Port the Futu SDKs connect to (Python: OpenQuoteContext(host, port)).
+  # Every account's Pod has its own network namespace, so they can all keep the
+  # 11111 default - unlike the official "two OpenD on one machine" recipe, which
+  # has to hand out 11111/11112 because those instances share one host.
+  apiPort: 11111
+  # Telnet ops console. 0 disables it. Needed to answer a device-lock
+  # verification from inside the cluster: req_phone_verify_code, then
+  # input_phone_verify_code -code=123456 (and the pic/captcha pair). It is
+  # plaintext and unauthenticated, so it stays off unless asked for, and the
+  # Service only publishes it when it is on.
+  telnetPort: 0
+  lang: chs
+  logLevel: info
+  # enable or disable; disable drops simulated-trading support for a little less
+  # resource use. Empty leaves the binary default.
+  simulateTrade: ""
+  # Required when trading futures, e.g. UTC+8.
+  futureTradeApiTimeZone: ""
+  # Extra command-line arguments, appended after the ones the chart derives, so
+  # they win over them. (workload.args, from the shared schema, is appended
+  # after even these and can override anything.)
+  extraArgs: []
+  # Settings that exist only in FutuOpenD.xml and have no command-line flag:
+  # push_proto_type (0 pb / 1 json), qot_push_frequency, pdt_protection,
+  # dtcall_confirmation, websocket_*, log_path. Leave empty and the image's own
+  # FutuOpenD.xml is used as-is. Set any key and the chart renders a complete
+  # config file per account (the documented defaults below, with yours merged
+  # over them) into a ConfigMap, which the entrypoint copies into the state
+  # directory - a ConfigMap mount is read-only and OpenD may rewrite its config.
+  config: {}
+
+# One entry per Futu account. Empty renders nothing (the chart stays lintable
+# without credentials, like every other chart here).
+#
+#   - name: alice                  # required; becomes the resource name suffix
+#     loginAccount: "1000001"      # Futu ID, or the phone/email used to register
+#     loginPwdMd5: "098f6bcd..."   # MD5 of the login password, 32 hex chars
+#     loginRegion: hk
+#     existingSecret: ""           # use your own Secret instead of the two above
+#     loginByRemember: false       # see below
+#     rsaPrivateKey:               # trading only; see below
+#       secretName: futu-alice-rsa
+#       key: private_key.pem
+#       mountPath: /etc/futuopend/rsa
+#     resources: {}
+#     nodeSelector: {}
+#     persistence:
+#       size: 5Gi
+#     service:
+#       type: NodePort
+#     extraArgs: []
+#     config: {}
+#
+# Credentials:
+#   loginPwdMd5 (or the existingSecret keys loginAccount/loginPwdMd5) is passed
+#   as -login_pwd_md5. Only the MD5 is accepted - the binary rejects a
+#   plaintext -login_pwd - and it travels through a Secret into an environment
+#   variable that args reference as $(FUTU_LOGIN_PWD_MD5), so the password
+#   never appears in the Pod spec or in `kubectl describe pod`. OpenD masks it
+#   as *** in its own log. Get the MD5 with: printf %s "$PASSWORD" | md5sum
+#
+# loginByRemember:
+#   OpenD 10.10 (2026-08) removed account/password from the config file and
+#   made a bare start interactive. -login_pwd_md5 still exists and is used by
+#   this chart's default (verified against the 10.11.7108 binary: it is
+#   accepted by the argument parser and shows up as a live setting in OpenD's
+#   own log line "LogCfg, login_account: (...) login_pwd_md5: ***"). If a
+#   future build drops it, set this to true to fall back to the remembered
+#   session: log in once by hand (`kubectl exec -it <pod> -- /opt/futuopend/FutuOpenD
+#   -console=1 ...` or through the telnet console), let it write the session
+#   into the PVC, and from then on the chart starts OpenD with
+#   -login_account=... -login_by_remember=1 and no password at all.
+#
+# rsaPrivateKey (trading accounts only):
+#   Futu requires a private key for the trading API as soon as the listen
+#   address is not local ("如果监听地址不是本地，您必须配置私钥才能使用交易接口"),
+#   and in a container it never is. PKCS#1, 512 or 1024 bit, no passphrase.
+#   Quote interfaces work without it, which is why it is opt-in.
+accounts: []

@@ -19,6 +19,7 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 | Chart | Version | App version | Description |
 |-------|---------|-------------|-------------|
 | [aktools](charts/aktools) | 0.2.4 | 0.0.91 | AKTools - HTTP API for A-share market data |
+| [futuopend](charts/futuopend) | 0.1.0 | 10.11.7108 | Futu OpenD - Futu OpenAPI gateway, one instance per account |
 | [mindsdb](charts/mindsdb) | 2.0.2 | v26.1.0 | MindsDB - AI layer over your database |
 | [node-red](charts/node-red) | 0.1.1 | 5.0.7-24 | Node-RED - low-code programming for event-driven applications |
 | [shadowsocks](charts/shadowsocks) | 2.0.1 | v3.3.5 | shadowsocks-libev server |
@@ -52,7 +53,9 @@ charts/
 Every chart exposes the same top level keys, so a values file that works for one
 chart transfers to the others. What changes per chart is the app specific
 sections (`shadowsocks.*`, `kcptun.*`, `xtls.options`, `mindsdb.*`,
-`nodeRed.*`).
+`nodeRed.*`, `futuopend.*`) plus, for a chart that runs one instance per item
+rather than one per release, the list that drives it - `futuopend.accounts`
+renders one Deployment/Service/PVC/Secret set per account.
 
 ```yaml
 replicaCount: 1
@@ -132,8 +135,12 @@ make images.<chart> TAG=<tag>   # override the tag
 The tag has to match the chart's `Chart.yaml` `appVersion`: `image.tag` is
 empty in `values.yaml` and `common.imageRef` falls back to `appVersion`. Both
 platforms are built (`linux/amd64,linux/arm64`) because the cluster is amd64 +
-arm64 mixed. `charts/<chart>/.helmignore` has to exclude `image/`, or
-`helm package` ships the build context inside the released chart.
+arm64 mixed. A chart whose upstream artifact exists for one architecture only
+overrides that per chart - `PLATFORMS.futuopend := linux/amd64` in the
+`Makefile`, because Futu ships the OpenD binary for x86-64 only and an arm64
+variant would be an amd64 binary under an arm64 label, failing with `exec
+format error` on an arm64 node. `charts/<chart>/.helmignore` has to exclude
+`image/`, or `helm package` ships the build context inside the released chart.
 
 Pushing over a tag that is already deployed rolls nothing: the rendered
 manifest is unchanged, so Argo CD sees no diff, and a node that cached the old
@@ -157,12 +164,17 @@ organization enforces SSO, and a token is scoped and revocable where the
 password is not - use a token in either case.
 
 An image-only change still counts as a chart change to chart-releaser: it
-truncates `charts/<chart>/image/requirements.txt` to `charts/<chart>` when
+truncates anything under `charts/<chart>/image/` to `charts/<chart>` when
 deciding what to package, so the release workflow would rebuild the current
 version and try to publish it again, which GitHub rejects. Bump `Chart.yaml`
 `version` in the same commit as any change under `image/`.
 
-`charts/aktools` is the only chart that builds an image today.
+`charts/aktools` and `charts/futuopend` are the charts that build an image
+today. Both are built from an upstream artifact rather than from source:
+`aktools` from PyPI, `futuopend` from Futu's download CDN, which needs no
+credentials (the OpenD tarball is a public bucket) but is reachable only from
+wherever Futu's CDN answers - if a CI runner cannot fetch it, build that image
+locally with the same `make images.futuopend` target.
 
 ## Releasing
 
@@ -182,6 +194,46 @@ that window fails and is retried by the kubelet.
 
 ## Version history notes
 
+- **2026-10-05** - new `futuopend` chart (Futu OpenD, the gateway for the Futu
+  OpenAPI). It runs **one OpenD instance per account**, so unlike every other
+  chart here the workload is driven by a list: each entry of `accounts` renders
+  its own Deployment, Service, PVC and Secret, named `<release>-<chart>-<account>`.
+  The common library names and labels from the release, so each account is
+  rendered in a synthetic context whose `nameOverride`/`fullnameOverride` carry
+  the account - that is what keeps the selectors apart, and without it every
+  account's Service would select every account's Pod. No change to
+  `charts/common` was needed, and no CRD: plain Deployments express this.
+  Correctness details worth knowing:
+  - the image is **amd64 only**, because Futu publishes no arm build (the
+    download endpoint has no arm slot and the binary is `x86-64`). The Makefile
+    gained a per-chart `PLATFORMS.<chart>` override for it. `nodeSelector`
+    defaults to `kubernetes.io/arch: amd64` so a Pod cannot land on an arm64
+    node and die with `exec format error`.
+  - `strategy: Recreate` and `replicas: 1` are fixed, not defaulted. The state
+    PVC is ReadWriteOnce and a rolling update would either multi-attach it or
+    briefly run two logins of the same account; `replicaCount > 1` fails the
+    render rather than being ignored. Futu allows one top-quote-rights terminal
+    per account and kicks the other.
+  - `persistence` defaults to **on**: `<mountPath>/F3CNN/Device.dat` is the
+    device identity, and a fresh one re-triggers device-lock (SMS) verification
+    and consumes the account's device allowance. It must not be shared between
+    accounts.
+  - credentials: OpenD 10.10 removed account/password from `FutuOpenD.xml`, but
+    the CLI flags still work - verified against the 10.11.7108 binary, which
+    accepts `-login_pwd_md5` (and rejects plaintext `-login_pwd`, so only the
+    MD5 is ever handled) and logs it as a live setting. It goes through a Secret
+    into an env var that `args` reference, so it never appears in the Pod spec.
+    `loginByRemember` covers the fallback where a session is bootstrapped by
+    hand and reused from the PVC.
+  - `telnetPort` is opt-in: it is the only way to answer a device-lock
+    verification from inside the cluster, but it is plaintext and
+    unauthenticated.
+  - deliberately **not** exposed from the shared schema: `ingress` (the API is
+    raw TCP carrying protobuf, not HTTP) and `autoscaling` (a second replica is
+    a second login of the same account). Both are documented in `values.yaml`.
+  - the probes are TCP connects, which prove the port is open and **not** that
+    the login succeeded - a failed login still leaves the port listening. The
+    real log is on the PVC at `<mountPath>/log/Log/`.
 - **2026-10-04** - images are built and pushed by the `Build Images` workflow
   instead of by hand: on every push to `master` that touches
   `charts/*/image/**` it runs `make images.<chart>` (the same target as a local

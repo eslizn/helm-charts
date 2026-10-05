@@ -1,0 +1,17 @@
+apiVersion: v2
+name: futuopend
+description: Futu OpenD - gateway for the Futu OpenAPI, one instance per trading account (https://openapi.futunn.com/futu-api-doc/)
+type: application
+version: 0.1.0
+appVersion: "10.11.7108"
+kubeVersion: ">=1.24.0-0"
+home: https://openapi.futunn.com/futu-api-doc/
+sources:
+  - https://openapi.futunn.com/futu-api-doc/
+maintainers:
+  - name: eslizn
+    url: https://github.com/eslizn
+dependencies:
+  - name: common
+    version: 0.1.1
+    repository: file://../common

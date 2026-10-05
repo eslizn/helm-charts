@@ -24,6 +24,14 @@ REPO      ?= docker.io/eslizn
 TAG       ?=
 PLATFORMS ?= linux/amd64,linux/arm64
 
+# Per-chart platform override, for a chart whose upstream artifact only exists
+# for one architecture. futuopend is the case: Futu publishes the OpenD binary
+# for x86-64 only (there is no arm download at all), so a linux/arm64 variant
+# would be an amd64 binary wearing an arm64 label - it would pull and then die
+# with "exec format error" on an arm64 node, which is worse than not existing.
+# Everything else follows the PLATFORMS default above.
+PLATFORMS.futuopend := linux/amd64
+
 # FORCE keeps the pattern rule from being shadowed: without a prerequisite, a
 # file or directory that happens to be named images.<chart> makes this target
 # look up to date, and make exits 0 having built nothing.
@@ -42,9 +50,9 @@ images.%: FORCE
 	if [ -z "$$tag" ]; then \
 		echo "no tag: pass TAG=<tag>, or set appVersion in $$chart/Chart.yaml" >&2; exit 1; \
 	fi; \
-	echo "==> $$context -> $(REPO)/$*:$$tag [$(PLATFORMS)]"; \
+	echo "==> $$context -> $(REPO)/$*:$$tag [$(or $(PLATFORMS.$*),$(PLATFORMS))]"; \
 	docker buildx build \
-		--platform '$(PLATFORMS)' \
+		--platform '$(or $(PLATFORMS.$*),$(PLATFORMS))' \
 		-f "$$context/Dockerfile" \
 		-t "$(REPO)/$*:$$tag" \
 		--push \

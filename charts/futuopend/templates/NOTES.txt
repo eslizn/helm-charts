@@ -1,0 +1,34 @@
+{{- if not .Values.accounts }}
+{{ .Chart.Name }}: no accounts configured - nothing but the ServiceAccount was
+rendered. Add entries under `accounts:` (one per Futu account) and upgrade.
+{{- else }}
+Futu OpenD is deployed for {{ len .Values.accounts }} account(s). One Pod per
+account; the quote and trade SDKs connect to that account's Service on port
+{{ (.Values.futuopend | default dict).apiPort | default 11111 }}:
+
+{{- range $acct := .Values.accounts }}
+  {{- $v := mergeOverwrite (deepCopy $.Values) (deepCopy $acct) -}}
+  {{- $_ := set $v "nameOverride" (printf "%s-%s" (include "common.name" $) $acct.name) -}}
+  {{- $_ := set $v "fullnameOverride" (printf "%s-%s" (include "common.fullname" $) $acct.name) -}}
+  {{- $ctx := dict "Values" $v "Chart" $.Chart "Release" $.Release }}
+  * {{ $acct.name }}: {{ include "common.fullname" $ctx }}:{{ ($v.futuopend | default dict).apiPort | default 11111 }}{{ if gt (int (($v.futuopend | default dict).telnetPort | default 0)) 0 }} (telnet ops {{ ($v.futuopend | default dict).telnetPort }}){{ end }}
+{{- end }}
+
+Check the login - a listening port does NOT mean the account logged in:
+
+  kubectl -n {{ .Release.Namespace }} exec <pod> -- tail -n 50 {{ (.Values.persistence | default dict).mountPath | default "/data" }}/log/Log/GTWLog_*.log
+  # the effective settings are logged there as:
+  #   LogCfg, login_account: (...)  login_pwd_md5: ***  api_ip: (0.0.0.0, 127.0.0.1)
+
+If the account has device lock enabled, the first login from this new device
+needs SMS verification. Turn on the telnet console for that account
+(futuopend.telnetPort), then from inside the cluster:
+
+  nc <service> <telnetPort>
+  req_phone_verify_code
+  input_phone_verify_code -code=123456      # or req_pic_verify_code / input_pic_verify_code
+
+Once it has logged in successfully, the session and device identity
+(F3CNN/Device.dat) are on the account's PVC, so restarts do not re-verify - which
+is why that PVC must not be deleted or shared between accounts.
+{{- end }}

@@ -89,10 +89,15 @@ ingress:
   # handshake and routes on the SNI, then forwards the decrypted PostgreSQL
   # stream - which is exactly what a server that refuses SSLRequest needs.
   traefik: true
-  # Must name a TCP entrypoint the Traefik install actually has; this pair
-  # comes from the traefik catalog entry (entryPoints.pgone-tcp.address).
+  # Must name a TCP entrypoint the Traefik install actually has - in this
+  # cluster the `postgres` entrypoint from the traefik catalog entry
+  # (--entryPoints.postgres.address=:5432). A name Traefik does not know gets
+  # the router dropped ("EntryPoint doesn't exist" in its log), and every
+  # connection to the port is then accepted and closed: a PostgreSQL client
+  # reports that as "remote host terminated the handshake", not as a routing
+  # problem.
   entryPoints:
-    - pgone-tcp
+    - postgres
   # Client facing name: the HostSNI match and the certificate's DNS name.
   host: pgone.infra.us.to
   # There is no Ingress for cert-manager's ingress-shim to ride on, so the

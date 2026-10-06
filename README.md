@@ -22,7 +22,7 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 | [futuopend](charts/futuopend) | 0.1.0 | 10.11.7108 | Futu OpenD - Futu OpenAPI gateway, one instance per account |
 | [mindsdb](charts/mindsdb) | 2.0.2 | v26.1.0 | MindsDB - AI layer over your database |
 | [node-red](charts/node-red) | 0.1.1 | 5.0.7-24 | Node-RED - low-code programming for event-driven applications |
-| [pgone](charts/pgone) | 0.1.2 | latest | pgone - PostgreSQL wire protocol gateway |
+| [pgone](charts/pgone) | 0.1.3 | latest | pgone - PostgreSQL wire protocol gateway |
 | [shadowsocks](charts/shadowsocks) | 2.0.1 | v3.3.5 | shadowsocks-libev server |
 | [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.1 | v1.25.0 | shadowsocks-rust server |
 | [xtls](charts/xtls) | 2.0.1 | 26.3.27 | Xray-core VLESS/REALITY proxy |
@@ -195,6 +195,14 @@ that window fails and is retried by the kubelet.
 
 ## Version history notes
 
+- **2026-10-06** - `pgone` 0.1.3: the `IngressRouteTCP` named a TCP entrypoint
+  the Traefik install does not have (`pgone-tcp`; the entrypoint in this
+  cluster is `postgres`), so Traefik logged `EntryPoint doesn't exist` and
+  dropped the router. The port was still listening, so what a client saw was
+  the connection being accepted and closed during the SSLRequest/TLS
+  exchange - "remote host terminated the handshake" - with nothing in the
+  Application's sync status to suggest a routing problem. The default is now
+  `postgres`.
 - **2026-10-06** - `pgone` 0.1.2: the image tag is the floating `latest`, not
   `Chart.yaml`'s `appVersion` (which is now only the `app.kubernetes.io/version`
   label), and `pullPolicy` is `Always` to match - a floating tag with

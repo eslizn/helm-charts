@@ -1,0 +1,28 @@
+{{- /* TLS is terminated, not passed through. pgone answers every SSLRequest with
+       "N" and speaks no TLS, so a passthrough route would advertise TLS and then
+       hand the client a plaintext server. Terminating means Traefik performs
+       the PostgreSQL STARTTLS exchange itself (reads the SSLRequest, answers
+       "S", completes the handshake), routes on the SNI in the ClientHello, and
+       forwards the decrypted stream to pgone - which is why the HostSNI rule
+       can name a real client facing hostname at all. */ -}}
+{{- if and .Values.ingress.traefik .Values.ingress.host }}
+{{- $fullname := include "common.fullname" . -}}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ $fullname }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    {{- toYaml .Values.ingress.entryPoints | nindent 4 }}
+  routes:
+    - match: HostSNI(`{{ .Values.ingress.host }}`)
+      services:
+        - name: {{ $fullname }}
+          port: {{ .Values.service.main.port }}
+  {{- if dig "certManager" "enabled" false .Values.ingress }}
+  tls:
+    secretName: {{ $fullname }}-tls
+  {{- end }}
+{{- end }}

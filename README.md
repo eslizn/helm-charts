@@ -22,6 +22,7 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 | [futuopend](charts/futuopend) | 0.1.0 | 10.11.7108 | Futu OpenD - Futu OpenAPI gateway, one instance per account |
 | [mindsdb](charts/mindsdb) | 2.0.2 | v26.1.0 | MindsDB - AI layer over your database |
 | [node-red](charts/node-red) | 0.1.1 | 5.0.7-24 | Node-RED - low-code programming for event-driven applications |
+| [pgone](charts/pgone) | 0.1.0 | 62efe27 | pgone - PostgreSQL wire protocol gateway |
 | [shadowsocks](charts/shadowsocks) | 2.0.1 | v3.3.5 | shadowsocks-libev server |
 | [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.1 | v1.25.0 | shadowsocks-rust server |
 | [xtls](charts/xtls) | 2.0.1 | 26.3.27 | Xray-core VLESS/REALITY proxy |
@@ -194,6 +195,16 @@ that window fails and is retried by the kubelet.
 
 ## Version history notes
 
+- **2026-10-05** - new `pgone` chart (a PostgreSQL wire protocol gateway). Three
+  firsts for this repository: the image is built and pushed by the pgone
+  repository's own `Publish Image` workflow, so `appVersion` tracks a pgone
+  commit rather than an upstream release; TLS is *terminated* at Traefik rather
+  than passed through (pgone answers every SSLRequest with "N" and speaks no
+  TLS, and Traefik's PostgreSQL STARTTLS handling is what lets an ordinary
+  `sslmode=require` client reach it); and the certificate is rendered by the
+  chart as a `Certificate`, because pgone has no Ingress for cert-manager's
+  ingress-shim to watch. It routes on a TCP entrypoint (`pgone-tcp`, 5432) that
+  the Traefik install has to declare first.
 - **2026-10-05** - new `futuopend` chart (Futu OpenD, the gateway for the Futu
   OpenAPI). It runs **one OpenD instance per account**, so unlike every other
   chart here the workload is driven by a list: each entry of `accounts` renders

@@ -1,0 +1,24 @@
+{{- /* pgone is configured with flags only - no environment variable and no
+       configuration file - so the container args are built here, one per key of
+       the pgone section, and values.yaml stays the only place to edit.
+
+       The two refusals below are the chart's own invariants, not pgone's: a
+       second replica would have a second writer on one storage root, and a
+       mountPath that is not the storage root would leave the server writing
+       into the container filesystem, which is gone on the next restart. */ -}}
+{{- $p := .Values.pgone -}}
+{{- if gt (int .Values.replicaCount) 1 -}}
+{{- fail (printf "replicaCount must be 1: one storage root is meant for one server process (got %v)" .Values.replicaCount) -}}
+{{- end -}}
+{{- if and .Values.persistence.enabled (ne .Values.persistence.mountPath $p.storage) -}}
+{{- fail (printf "persistence.mountPath (%v) must equal pgone.storage (%v): the storage root is the only path the server writes" .Values.persistence.mountPath $p.storage) -}}
+{{- end -}}
+{{- $args := list "-addr" $p.addr "-storage" $p.storage -}}
+{{- $args = concat $args (list "-server-version" ($p.serverVersion | toString)) -}}
+{{- with $p.logFormat }}{{ $args = concat $args (list "-log-format" .) }}{{ end -}}
+{{- with $p.logLevel }}{{ $args = concat $args (list "-log-level" .) }}{{ end -}}
+{{- range $key, $value := $p.settings -}}
+{{- $args = concat $args (list "-set" (printf "%s=%s" $key ($value | toString))) -}}
+{{- end -}}
+{{- $args = concat $args ($p.extraArgs | default list) -}}
+{{- include "common.deployment" (dict "ctx" $ "args" $args) }}

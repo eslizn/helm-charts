@@ -1,0 +1,21 @@
+{{- /* The certificate for the name clients connect to. Every other chart here
+       gets one from cert-manager's ingress-shim, which watches Ingress objects
+       - pgone speaks the PostgreSQL protocol and has no Ingress to watch, so
+       the Certificate is rendered explicitly and Traefik picks the secret up
+       through the IngressRouteTCP's tls.secretName. */ -}}
+{{- if and .Values.ingress.traefik (dig "certManager" "enabled" false .Values.ingress) .Values.ingress.host }}
+{{- $fullname := include "common.fullname" . -}}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $fullname }}-tls
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  secretName: {{ $fullname }}-tls
+  dnsNames:
+    - {{ .Values.ingress.host | quote }}
+  issuerRef:
+    name: {{ dig "certManager" "clusterIssuer" "letsencrypt-dns" .Values.ingress }}
+    kind: ClusterIssuer
+{{- end }}

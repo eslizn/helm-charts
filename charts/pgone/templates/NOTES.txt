@@ -1,0 +1,46 @@
+pgone serves the PostgreSQL wire protocol on port {{ .Values.service.main.port }}:
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "common.fullname" . }} 5432:{{ .Values.service.main.port }}
+{{- if and .Values.ingress.traefik .Values.ingress.host }}
+
+From outside, Traefik terminates TLS on the {{ .Values.ingress.host }} SNI and
+forwards the decrypted stream here - pgone itself answers every SSLRequest with
+"N" and speaks no TLS, so sslmode=require works but sslmode=disable does not
+(nothing matches a plaintext client on that route):
+
+  psql "host={{ .Values.ingress.host }} port=<traefik entrypoint port> sslmode=require dbname=postgres user=<role>"
+{{- end }}
+
+The only account on a fresh storage is `postgres`: superuser, LocalOnly (a
+connection that does not arrive on loopback is refused with SQLSTATE 28000), and
+no verifier (trusted on loopback). Every other role has to be written into
+pg_catalog.pg_authid: there is no CREATE ROLE yet, the table is the interface,
+and rolpassword takes a SCRAM verifier rather than a password.
+
+Generate the verifier where the password lives. It prompts, so the password
+reaches neither the shell history nor the cluster:
+
+  VER=$(python3 - <<'PY'
+  import base64, hashlib, hmac, os, getpass
+  pw = getpass.getpass().encode()
+  salt, i = os.urandom(16), 4096
+  sp = hashlib.pbkdf2_hmac('sha256', pw, salt, i)
+  ck = hmac.new(sp, b'Client Key', hashlib.sha256).digest()
+  sk = hmac.new(sp, b'Server Key', hashlib.sha256).digest()
+  b64 = lambda b: base64.b64encode(b).decode()
+  print(f"SCRAM-SHA-256${i}:{b64(salt)}${b64(hashlib.sha256(ck).digest())}:{b64(sk)}")
+  PY
+  )
+
+Then write the row from inside the Pod's network namespace, which is what
+loopback means here. The image is scratch, so the client comes from an ephemeral
+container (psql, no server):
+
+  kubectl -n {{ .Release.Namespace }} debug -it deploy/{{ include "common.fullname" . }} \
+    --image=postgres:16-alpine -- psql -h 127.0.0.1 -U postgres -d postgres
+  #   INSERT INTO pg_catalog.pg_authid (oid, rolname, rolpassword, pgone_local_only)
+  #   VALUES (2, 'app', '<verifier>', false);
+  #   -- oid is a column, not an identity: the bootstrap account holds 1.
+  #   -- pgone_local_only false (the default) is what admits a non-loopback
+  #      connection; true is what the bootstrap account has.
+  #   Rotate: UPDATE pg_catalog.pg_authid SET rolpassword = '<new verifier>' WHERE rolname = 'app';

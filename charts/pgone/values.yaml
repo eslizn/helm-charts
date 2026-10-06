@@ -1,0 +1,141 @@
+# Default values for pgone.
+# The schema is shared by every chart in this repository: see
+# ../common/templates/_helpers.tpl and the repository README.
+
+# The server owns its storage root and assumes a single writer (no cross
+# process lock), so more than one replica would corrupt it - the deployment
+# template refuses to render if this is raised.
+replicaCount: 1
+
+image:
+  repository: docker.io/eslizn/pgone
+  # Empty falls back to Chart.yaml appVersion, which is the tag the pgone
+  # repository's Publish Image workflow pushed (the commit it was built from).
+  # There is no upstream release to track: the chart moves when that commit
+  # does.
+  tag: ""
+  # Pinned tag, so there is nothing to re-check on every start.
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+# The image runs as uid/gid 65532 and storage is a mounted volume, so the
+# kubelet has to hand that directory to that user - a fresh volume is
+# root-owned. The image is scratch, so there is no /etc/passwd to name a user
+# in; only the number works. fsGroupChangePolicy keeps the recursive chown to
+# the first mount.
+podSecurityContext:
+  fsGroup: 65532
+  fsGroupChangePolicy: OnRootMismatch
+securityContext: {}
+
+# Container level configuration.
+workload:
+  kind: Deployment
+  ports:
+    - name: pg
+      containerPort: 5432
+      protocol: TCP
+  # pgone serves the PostgreSQL wire protocol and nothing else: no HTTP
+  # endpoint, no metrics, no health route. A TCP connect is the whole of what
+  # can be checked from outside. It is a meaningful signal, though: the
+  # listener is opened after storage and every extension are up, so a port that
+  # answers is a server that has finished starting.
+  livenessProbe:
+    tcpSocket:
+      port: pg
+    periodSeconds: 20
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readinessProbe:
+    tcpSocket:
+      port: pg
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# Named services: "main" is rendered as <fullname>, other keys as <fullname>-<key>.
+# targetPort refers to the container port name from workload.ports.
+service:
+  main:
+    type: ClusterIP
+    port: 5432
+    targetPort: pg
+    portName: pg
+
+# Client access. pgone speaks no TLS at all - every SSLRequest is answered "N" -
+# so TLS has to be terminated in front of it, and the Traefik TCP router below
+# does that. Its HostSNI rule is the name clients put in their connection
+# string, and the certificate is issued for that same name.
+ingress:
+  # No HTTP surface, so the shared Ingress template has nothing to render.
+  enabled: false
+  # IngressRouteTCP (traefik.io/v1alpha1), terminated rather than passed
+  # through: Traefik answers the client's SSLRequest itself, completes the TLS
+  # handshake and routes on the SNI, then forwards the decrypted PostgreSQL
+  # stream - which is exactly what a server that refuses SSLRequest needs.
+  traefik: true
+  # Must name a TCP entrypoint the Traefik install actually has; this pair
+  # comes from the traefik catalog entry (entryPoints.pgone-tcp.address).
+  entryPoints:
+    - pgone-tcp
+  # Client facing name: the HostSNI match and the certificate's DNS name.
+  host: pgone.infra.us.to
+  # There is no Ingress for cert-manager's ingress-shim to ride on, so the
+  # Certificate is rendered by this chart (templates/certificate.yaml).
+  certManager:
+    enabled: true
+    clusterIssuer: letsencrypt-dns
+
+resources: {}
+
+# The accounts, the enabled extensions and every extension's data live here.
+# Without it every restart starts from scratch: the bootstrap account is
+# recreated empty and the finance extension re-downloads its cache.
+persistence:
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  # The finance extension's parquet cache (every A-share daily bar) is the bulk
+  # of what fills this.
+  size: 8Gi
+  # Must equal pgone.storage - the storage root is the only path the server
+  # writes, and the deployment template refuses to render if the two drift.
+  mountPath: /var/lib/pgone
+  subPath: ""
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# pgone specific configuration, one key per flag. The binary reads flags only:
+# there is no environment variable and no configuration file to point at.
+pgone:
+  # -addr. The container port is fixed at 5432 by the image, the probes and the
+  # Service, so only the bind address is worth changing.
+  addr: 0.0.0.0:5432
+  # -storage. Must equal persistence.mountPath.
+  storage: /var/lib/pgone
+  # -server-version: what clients are told they are talking to.
+  serverVersion: "9.4"
+  logFormat: json
+  logLevel: info
+  # -set ext.<extension>.<key>=<value>, rendered in key order. The postgres
+  # extension's keys (ext.postgres.auth.*) have the defaults the pgone README
+  # documents; ext.finance.* configures the finance extension, which is enabled
+  # from a client with CREATE EXTENSION finance - there is no flag for that,
+  # and nothing is enabled by default beyond the system extension.
+  settings: {}
+  # Extra arguments appended verbatim after the generated ones.
+  extraArgs: []

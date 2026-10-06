@@ -576,6 +576,27 @@ entries:
   pgone:
   - apiVersion: v2
     appVersion: 62efe27
+    created: "2026-10-06T15:43:10.530548442Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.1
+    description: pgone - a PostgreSQL wire protocol gateway (https://github.com/eslizn/pgone)
+    digest: b4e877f1037c90a61f63bbaef50297dfd5ee20da6fdf684d1bb075ac15bc1573
+    home: https://github.com/eslizn/pgone
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: pgone
+    sources:
+    - https://github.com/eslizn/pgone
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/pgone-0.1.2/pgone-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: 62efe27
     created: "2026-10-06T15:39:39.140840302Z"
     dependencies:
     - name: common
@@ -987,4 +1008,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-06T15:39:39.140910303Z"
+generated: "2026-10-06T15:43:10.530646329Z"

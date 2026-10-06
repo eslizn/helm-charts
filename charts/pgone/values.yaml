@@ -13,7 +13,7 @@ image:
   # repository's Publish Image workflow pushed (the commit it was built from).
   # There is no upstream release to track: the chart moves when that commit
   # does.
-  tag: ""
+  tag: "latest"
   # Pinned tag, so there is nothing to re-check on every start.
   pullPolicy: IfNotPresent
 

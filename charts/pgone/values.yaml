@@ -16,10 +16,10 @@ image:
   # An empty tag would instead fall back to Chart.yaml appVersion, which is only
   # the label now - see common.imageRef.
   tag: "latest"
-  # A floating tag with IfNotPresent means a node that already cached `latest`
-  # keeps serving it: after Publish Image pushes a new one, clear that node's
-  # image cache (or make sure the pod lands on a node that has none).
-  pullPolicy: IfNotPresent
+  # Always, because the tag above floats: with IfNotPresent a node that already
+  # cached `latest` would keep serving the old image until its cache is cleared
+  # by hand, which is exactly the failure the floating tag was meant to avoid.
+  pullPolicy: Always
 
 imagePullSecrets: []
 nameOverride: ""

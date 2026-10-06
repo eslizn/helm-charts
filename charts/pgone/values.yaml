@@ -9,12 +9,16 @@ replicaCount: 1
 
 image:
   repository: docker.io/eslizn/pgone
-  # Empty falls back to Chart.yaml appVersion, which is the tag the pgone
-  # repository's Publish Image workflow pushed (the commit it was built from).
-  # There is no upstream release to track: the chart moves when that commit
-  # does.
+  # The pgone repository's Publish Image workflow pushes every build under both
+  # its commit sha and `latest`, and this chart follows `latest` rather than the
+  # sha: there is no upstream release to pin to, and a chart pinned to a commit
+  # had to be re-released (and the cluster re-synced) for every pgone commit.
+  # An empty tag would instead fall back to Chart.yaml appVersion, which is only
+  # the label now - see common.imageRef.
   tag: "latest"
-  # Pinned tag, so there is nothing to re-check on every start.
+  # A floating tag with IfNotPresent means a node that already cached `latest`
+  # keeps serving it: after Publish Image pushes a new one, clear that node's
+  # image cache (or make sure the pod lands on a node that has none).
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

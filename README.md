@@ -22,7 +22,7 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 | [futuopend](charts/futuopend) | 0.1.0 | 10.11.7108 | Futu OpenD - Futu OpenAPI gateway, one instance per account |
 | [mindsdb](charts/mindsdb) | 2.0.2 | v26.1.0 | MindsDB - AI layer over your database |
 | [node-red](charts/node-red) | 0.1.1 | 5.0.7-24 | Node-RED - low-code programming for event-driven applications |
-| [pgone](charts/pgone) | 0.1.0 | 62efe27 | pgone - PostgreSQL wire protocol gateway |
+| [pgone](charts/pgone) | 0.1.1 | latest | pgone - PostgreSQL wire protocol gateway |
 | [shadowsocks](charts/shadowsocks) | 2.0.1 | v3.3.5 | shadowsocks-libev server |
 | [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.1 | v1.25.0 | shadowsocks-rust server |
 | [xtls](charts/xtls) | 2.0.1 | 26.3.27 | Xray-core VLESS/REALITY proxy |
@@ -195,6 +195,16 @@ that window fails and is retried by the kubelet.
 
 ## Version history notes
 
+- **2026-10-06** - `pgone` 0.1.1: the image tag is the floating `latest`, not
+  `Chart.yaml`'s `appVersion` (which is now only the `app.kubernetes.io/version`
+  label). The chart had pinned a commit sha while the pgone repository's
+  `Publish Image` workflow pushed a later commit under both its sha and
+  `latest`, so the chart named an image nobody had pushed and the pod sat in
+  `ImagePullBackOff` - a chart and an image that have to be re-pinned in step
+  are a pair that drifts. The cost is the other half of the trade: with
+  `pullPolicy: IfNotPresent`, a node that already cached `latest` will not pull
+  a newer one, so clearing that node's image cache is part of pushing a pgone
+  image.
 - **2026-10-05** - new `pgone` chart (a PostgreSQL wire protocol gateway). Three
   firsts for this repository: the image is built and pushed by the pgone
   repository's own `Publish Image` workflow, so `appVersion` tracks a pgone

@@ -2,7 +2,7 @@ apiVersion: v2
 name: pgone
 description: pgone - a PostgreSQL wire protocol gateway (https://github.com/eslizn/pgone)
 type: application
-version: 0.1.0
+version: 0.1.1
 appVersion: "62efe27"
 kubeVersion: ">=1.24.0-0"
 home: https://github.com/eslizn/pgone

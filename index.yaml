@@ -573,6 +573,28 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/openclaw-0.1.0/openclaw-0.1.0.tgz
     version: 0.1.0
+  pgone:
+  - apiVersion: v2
+    appVersion: 62efe27
+    created: "2026-10-06T14:22:01.414039947Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.1
+    description: pgone - a PostgreSQL wire protocol gateway (https://github.com/eslizn/pgone)
+    digest: fc82bc0503ba4381a05d0a02db1501b0bdf8556012286b7e24d0b7aeb43a3fec
+    home: https://github.com/eslizn/pgone
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: pgone
+    sources:
+    - https://github.com/eslizn/pgone
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/pgone-0.1.0/pgone-0.1.0.tgz
+    version: 0.1.0
   picoclaw:
   - apiVersion: v2
     appVersion: v0.3.1
@@ -944,4 +966,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-05T09:27:01.517879985Z"
+generated: "2026-10-06T14:22:01.414174179Z"

@@ -3,6 +3,27 @@ entries:
   aktools:
   - apiVersion: v2
     appVersion: 0.0.91
+    created: "2026-10-16T15:15:53.45451699Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.2
+    description: AKTools - HTTP API for A-share market data (https://github.com/akfamily/aktools)
+    digest: 2a0cc9cdfbcd55cafbd6bcb56905bcd58ecaf9c292108015b04f58b27232c46b
+    home: https://github.com/akfamily/aktools
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: aktools
+    sources:
+    - https://github.com/akfamily/aktools
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/aktools-0.2.5/aktools-0.2.5.tgz
+    version: 0.2.5
+  - apiVersion: v2
+    appVersion: 0.0.91
     created: "2026-10-04T14:18:20.553467017Z"
     dependencies:
     - name: common
@@ -117,6 +138,19 @@ entries:
     version: 0.1.0
   common:
   - apiVersion: v2
+    created: "2026-10-16T15:15:53.594268079Z"
+    description: Library chart with the shared named templates used by every chart
+      in this repository
+    digest: aa6d4b8d075a18452ed9d5207ead1e7127e32055d9b1f2ffb4529d6e5303b338
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: common
+    type: library
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/common-0.1.2/common-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
     created: "2026-09-28T16:39:35.145957385Z"
     description: Library chart with the shared named templates used by every chart
       in this repository
@@ -143,6 +177,28 @@ entries:
     - https://github.com/eslizn/helm-charts/releases/download/common-0.1.0/common-0.1.0.tgz
     version: 0.1.0
   futuopend:
+  - apiVersion: v2
+    appVersion: 10.11.7108
+    created: "2026-10-16T15:15:53.720934579Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.2
+    description: Futu OpenD - gateway for the Futu OpenAPI, one instance per trading
+      account (https://openapi.futunn.com/futu-api-doc/)
+    digest: 429504d442fd890be470b6e79095a6b8c4cee4bec8d125cf36fdd935f34ff87a
+    home: https://openapi.futunn.com/futu-api-doc/
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: futuopend
+    sources:
+    - https://openapi.futunn.com/futu-api-doc/
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/futuopend-0.1.1/futuopend-0.1.1.tgz
+    version: 0.1.1
   - apiVersion: v2
     appVersion: 10.11.7108
     created: "2026-10-05T09:27:01.517720633Z"
@@ -219,6 +275,27 @@ entries:
     - https://github.com/eslizn/helm-charts/releases/download/influxdb-0.1.3/influxdb-0.1.3.tgz
     version: 0.1.3
   mindsdb:
+  - apiVersion: v2
+    appVersion: v26.1.0
+    created: "2026-10-16T15:15:53.857511719Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.2
+    description: MindsDB - AI layer over your database (https://github.com/mindsdb/mindsdb)
+    digest: 600a9ebb23040b93a8111ae2b7cda5ba804397a4116e1ac3361590c07b581feb
+    home: https://mindsdb.com
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: mindsdb
+    sources:
+    - https://github.com/mindsdb/mindsdb
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/mindsdb-2.0.3/mindsdb-2.0.3.tgz
+    version: 2.0.3
   - apiVersion: v2
     appVersion: v26.1.0
     created: "2026-09-28T17:37:02.672956899Z"
@@ -445,6 +522,28 @@ entries:
   node-red:
   - apiVersion: v2
     appVersion: 5.0.7-24
+    created: "2026-10-16T15:15:53.992441142Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.2
+    description: Node-RED - low-code programming for event-driven applications
+    digest: 3159237a13f7d7d9ea57cf3ab4d6cfc3474d2cafafc34fe3a4d33fc4c41c660a
+    home: https://nodered.org
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: node-red
+    sources:
+    - https://github.com/node-red/node-red
+    - https://github.com/node-red/node-red-docker
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/node-red-0.1.2/node-red-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: 5.0.7-24
     created: "2026-09-28T16:39:35.462428729Z"
     dependencies:
     - name: common
@@ -574,6 +673,27 @@ entries:
     - https://github.com/eslizn/helm-charts/releases/download/openclaw-0.1.0/openclaw-0.1.0.tgz
     version: 0.1.0
   pgone:
+  - apiVersion: v2
+    appVersion: 62efe27
+    created: "2026-10-16T15:15:54.15600702Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.2
+    description: pgone - a PostgreSQL wire protocol gateway (https://github.com/eslizn/pgone)
+    digest: b87b0936cb07aa42fdf67c9d95043190b6b1c284fa3721de5aa216e8f0ebd0ed
+    home: https://github.com/eslizn/pgone
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: pgone
+    sources:
+    - https://github.com/eslizn/pgone
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/pgone-0.1.4/pgone-0.1.4.tgz
+    version: 0.1.4
   - apiVersion: v2
     appVersion: 62efe27
     created: "2026-10-06T16:07:31.894072862Z"
@@ -723,6 +843,27 @@ entries:
   shadowsocks:
   - apiVersion: v2
     appVersion: v3.3.5
+    created: "2026-10-16T15:15:54.294808979Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.2
+    description: shadowsocks-libev server (https://github.com/shadowsocks/shadowsocks-libev)
+    digest: d7b1fdb78bf946a6a89c19c8304229042c35c3161903d432d3a421e402d7b567
+    home: https://github.com/shadowsocks/shadowsocks-libev
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: shadowsocks
+    sources:
+    - https://github.com/shadowsocks/shadowsocks-libev
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/shadowsocks-2.0.2/shadowsocks-2.0.2.tgz
+    version: 2.0.2
+  - apiVersion: v2
+    appVersion: v3.3.5
     created: "2026-09-28T16:39:35.587458913Z"
     dependencies:
     - name: common
@@ -846,6 +987,27 @@ entries:
   shadowsocks-rust:
   - apiVersion: v2
     appVersion: v1.25.0
+    created: "2026-10-16T15:15:54.477165265Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.2
+    description: shadowsocks-rust server (https://github.com/shadowsocks/shadowsocks-rust)
+    digest: 7d0dc91f491e27f567139740cf6699fd74babcef467ea9e3c5c64b74dd71fdc3
+    home: https://github.com/shadowsocks/shadowsocks-rust
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: shadowsocks-rust
+    sources:
+    - https://github.com/shadowsocks/shadowsocks-rust
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/shadowsocks-rust-0.2.2/shadowsocks-rust-0.2.2.tgz
+    version: 0.2.2
+  - apiVersion: v2
+    appVersion: v1.25.0
     created: "2026-09-28T16:39:35.7133265Z"
     dependencies:
     - name: common
@@ -939,6 +1101,27 @@ entries:
   xtls:
   - apiVersion: v2
     appVersion: 26.3.27
+    created: "2026-10-16T15:15:54.604200814Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.2
+    description: Xray-core VLESS/REALITY proxy (https://github.com/XTLS/Xray-core)
+    digest: a4c62b45423b1212020eb83c6568d67d80479391d88bfce4f22fee719c104b7c
+    home: https://github.com/XTLS/Xray-core
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: xtls
+    sources:
+    - https://github.com/XTLS/Xray-core
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/xtls-2.0.2/xtls-2.0.2.tgz
+    version: 2.0.2
+  - apiVersion: v2
+    appVersion: 26.3.27
     created: "2026-09-28T16:39:35.856944123Z"
     dependencies:
     - name: common
@@ -1029,4 +1212,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-06T16:07:31.894208655Z"
+generated: "2026-10-16T15:15:54.604371902Z"

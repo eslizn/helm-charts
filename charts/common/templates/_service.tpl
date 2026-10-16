@@ -3,6 +3,8 @@ Services. .Values.service is a map of named services; the "main" key renders as
 <fullname>, every other key as <fullname>-<key>. Each entry supports:
   enabled, type, port, targetPort, portName, protocol, nodePort, headless,
   clusterIP, loadBalancerIP, externalTrafficPolicy, internalTrafficPolicy,
+  trafficDistribution (PreferSameNode/PreferSameZone/PreferClose; only read by
+  kube-proxy, so a client that dials endpoint IPs on its own ignores it),
   annotations, labels, extraPorts (raw list appended after the primary port),
   ports (raw list that replaces the primary port entirely).
 
@@ -45,6 +47,9 @@ spec:
   {{- end }}
   {{- with $svc.internalTrafficPolicy }}
   internalTrafficPolicy: {{ . }}
+  {{- end }}
+  {{- with $svc.trafficDistribution }}
+  trafficDistribution: {{ . }}
   {{- end }}
   {{- end }}
   ports:

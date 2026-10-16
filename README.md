@@ -195,6 +195,19 @@ that window fails and is retried by the kubelet.
 
 ## Version history notes
 
+- **2026-10-16** - `xtls` 2.0.2 / `common` 0.1.2: the Traefik -> xray hop
+  ignored the Service. Traefik resolves a CRD service's endpoints itself and
+  dials the pod IPs, and only kube-proxy reads `internalTrafficPolicy` /
+  `trafficDistribution` - so with a replica on ap-hk-1 and one on ap-seoul-1,
+  a client entering through either node was served by the other one about two
+  times out of three, paying for the slow upstream link (README section 6).
+  `ingress.nativeLB` (new, default `true`) makes Traefik dial the ClusterIP, so
+  kube-proxy picks the replica: `trafficDistribution: PreferSameNode` then keeps
+  the hop on the node the entry runs on, and falls back to the other replica
+  where a node has none (ap-sh-1) - `internalTrafficPolicy: Local` would drop
+  those connections instead of falling back. `common` gained the
+  `trafficDistribution` passthrough, which bumps the library for every chart
+  that pins it.
 - **2026-10-06** - `pgone` 0.1.3: the `IngressRouteTCP` named a TCP entrypoint
   the Traefik install does not have (`pgone-tcp`; the entrypoint in this
   cluster is `postgres`), so Traefik logged `EntryPoint doesn't exist` and

@@ -14,17 +14,26 @@ say a Trojan or a plain TLS vless inbound) are skipped: dig resolves the missing
 keys to an empty list, where writing the path out would abort the render with
 "nil pointer evaluating interface {}.streamSettings".
 
+nativeLB (values.ingress.nativeLB) is what puts the Service's
+internalTrafficPolicy/trafficDistribution in charge of picking a replica:
+without it Traefik resolves the endpoint IPs and balances on its own, and the
+Service fields never come into play.
+
 Usage: include "xtls.ingressRouteTCPRoutes" .
 */}}
 {{- define "xtls.ingressRouteTCPRoutes" -}}
 {{- $fullname := include "common.fullname" . -}}
 {{- $port := .Values.service.main.port -}}
+{{- $nativeLB := .Values.ingress.nativeLB -}}
 {{- range .Values.options.inbounds }}
 {{- range dig "streamSettings" "realitySettings" "serverNames" (list) . }}
 - match: HostSNI(`{{ . }}`)
   services:
     - name: {{ $fullname }}
       port: {{ $port }}
+      {{- if $nativeLB }}
+      nativeLB: true
+      {{- end }}
       proxyProtocol:
         version: 2
 {{- end }}

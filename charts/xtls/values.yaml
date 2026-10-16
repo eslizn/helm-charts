@@ -45,11 +45,22 @@ service:
     targetPort: https
     # Named like the container port; without it the port would be called "http".
     portName: https
+    # Which replica may serve a connection: "" leaves kube-proxy's default (any
+    # of them), PreferSameNode keeps it on the node the connecting client runs
+    # on and falls back to the other nodes where that one has no replica -
+    # unlike internalTrafficPolicy: Local, which drops the connection instead
+    # of falling back. Only read by kube-proxy, so it needs ingress.nativeLB.
+    trafficDistribution: ""
 
 # Traefik IngressRouteTCP (traefik.io/v1alpha1) for the REALITY inbound: one
 # HostSNI rule per serverName found in options.inbounds, TLS passthrough.
 ingress:
   traefik: true
+  # Dial the Service's ClusterIP instead of resolving the endpoint IPs, so
+  # kube-proxy picks the replica and the Service's internalTrafficPolicy /
+  # trafficDistribution apply to this hop. With it off, Traefik round-robins
+  # the endpoints itself and those Service fields are ignored entirely.
+  nativeLB: true
   entryPoints:
     - websecure
 

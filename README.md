@@ -25,7 +25,7 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 | [pgone](charts/pgone) | 0.1.3 | latest | pgone - PostgreSQL wire protocol gateway |
 | [shadowsocks](charts/shadowsocks) | 2.0.1 | v3.3.5 | shadowsocks-libev server |
 | [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.1 | v1.25.0 | shadowsocks-rust server |
-| [xtls](charts/xtls) | 2.0.1 | 26.3.27 | Xray-core VLESS/REALITY proxy |
+| [xtls](charts/xtls) | 2.0.3 | 26.3.27 | Xray-core VLESS/REALITY proxy |
 
 `Version` is the chart artifact version (bumped on every chart change, the
 number `chart-releaser` publishes under), `App version` is the upstream release
@@ -53,10 +53,10 @@ charts/
 
 Every chart exposes the same top level keys, so a values file that works for one
 chart transfers to the others. What changes per chart is the app specific
-sections (`shadowsocks.*`, `kcptun.*`, `xtls.options`, `mindsdb.*`,
-`nodeRed.*`, `futuopend.*`) plus, for a chart that runs one instance per item
-rather than one per release, the list that drives it - `futuopend.accounts`
-renders one Deployment/Service/PVC/Secret set per account.
+sections (`shadowsocks.*`, `kcptun.*`, `xtls.options`, `xtls.origin`,
+`mindsdb.*`, `nodeRed.*`, `futuopend.*`) plus, for a chart that runs one
+instance per item rather than one per release, the list that drives it -
+`futuopend.accounts` renders one Deployment/Service/PVC/Secret set per account.
 
 ```yaml
 replicaCount: 1
@@ -195,6 +195,45 @@ that window fails and is retried by the kubelet.
 
 ## Version history notes
 
+- **2026-11-04** - `xtls` 2.0.3: the REALITY fallback origin becomes an
+  optional nginx sidecar in the xray Pod (`origin.*`, default off), so the
+  separate `xtls-origin` Deployment/Service and its two Pods go away. The
+  sidecar is single-host: `origin.host` has no default (the release values
+  name the domain), and the chart requires it to be the only REALITY
+  `serverNames` entry and every REALITY inbound's `dest` to be
+  `127.0.0.1:<origin.port>` (9443); it fails the render otherwise instead of
+  shipping a fallback that never reaches nginx. That also removes the old
+  `www.xbox.com` passthrough: there is no stream/SNI map, resolver or upstream
+  list any more, nginx just terminates TLS on the origin port and returns a
+  page. Clients that still send `www.xbox.com` as their serverName must switch
+  to the single host - the Traefik `HostSNI` rules come from `serverNames`, so
+  such traffic is no longer routed to xray at all.
+  Details that matter at runtime:
+  - the TLS Secret is mounted `optional: true`, and nginx loads the
+    certificate through a variable path: the Pod starts before cert-manager has
+    issued it (a missing required Secret would block the whole xray Pod in
+    `ContainerCreating`), and a renewed Secret is picked up without a restart.
+  - the sidecar deliberately has **no readinessProbe** - the main container has
+    none either, so a not-ready origin would take the xray replica out of the
+    Service endpoints. Its TCP liveness only restarts nginx when it stops
+    listening.
+  - `fsGroup: 101` is merged into the Pod `securityContext` (the Secret is
+    0440 and nginx runs as 101); `origin.fsGroup` overrides it, an explicit
+    value in `podSecurityContext` does not.
+  - the Certificate is opt-out (`origin.certificate.enabled: false`) for a
+    Secret managed elsewhere, named by `origin.tlsSecretName`.
+  With a release named `xtls`, resource names stay `xtls-origin` /
+  `xtls-origin-tls`, so the migration can keep the existing Certificate and
+  ConfigMap: remove the old Application's
+  `resources-finalizer.argocd.argoproj.io` finalizer, delete the Application
+  (its resources stay behind), sync the new chart so it adopts them and rolls
+  xray onto the sidecar, then delete the leftover origin Deployment and
+  Service. Deleting the old Application with the finalizer first prunes the
+  Certificate and Service and briefly drops the fallback; running both owners
+  at once is not an option either. The deployment template also now appends
+  `workload.volumes`/`volumeMounts`/`extraContainers` to the chart's own
+  entries; before, passing the chart's lists replaced them, so any value set
+  in those fields was silently dropped.
 - **2026-10-16** - `xtls` 2.0.2 / `common` 0.1.2: the Traefik -> xray hop
   ignored the Service. Traefik resolves a CRD service's endpoints itself and
   dials the pod IPs, and only kube-proxy reads `internalTrafficPolicy` /

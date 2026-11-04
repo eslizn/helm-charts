@@ -2,4 +2,22 @@
 {{- $configName := include "common.fullname" . -}}
 {{- $volumes := list (dict "name" $configName "secret" (dict "secretName" $configName "items" (list (dict "key" "config.json" "path" "config.json")))) -}}
 {{- $volumeMounts := list (dict "name" $configName "mountPath" "/etc/xray/") -}}
-{{- include "common.deployment" (dict "ctx" $ "volumes" $volumes "volumeMounts" $volumeMounts) }}
+{{- $extraContainers := .Values.workload.extraContainers | default list -}}
+{{- /* Passing volumes/volumeMounts/extraContainers to common.deployment
+       replaces the values' lists instead of merging them, so the user's own
+       entries are concatenated here or they would be silently dropped. */ -}}
+{{- $volumes = concat $volumes (.Values.workload.volumes | default list) -}}
+{{- $volumeMounts = concat $volumeMounts (.Values.workload.volumeMounts | default list) -}}
+{{- $ctx := . -}}
+{{- if .Values.origin.enabled -}}
+{{- include "xtls.validateOrigin" . -}}
+{{- $volumes = concat $volumes (fromYamlArray (include "xtls.originVolumes" (dict "ctx" .))) -}}
+{{- $extraContainers = concat $extraContainers (fromYamlArray (include "xtls.originContainer" (dict "ctx" .))) -}}
+{{- /* The origin Secret is mounted 0440, so its group has to be handed to
+       nginx. fsGroup is a Pod level field; merge it into the user's
+       podSecurityContext rather than overwrite the whole block. */ -}}
+{{- $psc := deepCopy (.Values.podSecurityContext | default dict) -}}
+{{- $_ := set $psc "fsGroup" .Values.origin.fsGroup -}}
+{{- $ctx = dict "Values" (mergeOverwrite (deepCopy .Values) (dict "podSecurityContext" $psc)) "Chart" .Chart "Release" .Release -}}
+{{- end -}}
+{{- include "common.deployment" (dict "ctx" $ctx "volumes" $volumes "volumeMounts" $volumeMounts "extraContainers" $extraContainers) }}

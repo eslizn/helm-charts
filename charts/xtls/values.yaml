@@ -104,6 +104,62 @@ options:
     - protocol: freedom
     - protocol: blackhole
 
+# Optional nginx sidecar that acts as the REALITY fallback origin. It
+# terminates TLS for `host` with the cert-manager certificate and returns a
+# page, so a probe that fails REALITY sees a valid certificate instead of a
+# closed port. Default off.
+#
+# The sidecar is single-host: `host` must be the only REALITY serverName, and
+# every REALITY inbound has to point at it; the chart fails the render
+# otherwise:
+#   options.inbounds[].streamSettings.realitySettings.serverNames: [<host>]
+#   options.inbounds[].streamSettings.realitySettings.dest: 127.0.0.1:9443
+#
+# Changing this ConfigMap does not restart the Pod, the same as the xray config
+# Secret: bump podAnnotations to roll both containers (nginx reloads neither on
+# its own).
+origin:
+  enabled: false
+  # Pinned by digest: this container terminates TLS, so its patch level matters.
+  image:
+    repository: nginx
+    tag: "1.30.6-alpine@sha256:0e52bd054126cdc040b1276c0af347aeb02a41b9cfe305d6094767ac30e97949"
+    pullPolicy: IfNotPresent
+  # The only REALITY serverName: the certificate is issued for it, nginx
+  # terminates TLS for it, and the REALITY `dest` dials it on loopback. No
+  # default - the release values name the domain.
+  host: ""
+  # The TLS listener and the port the REALITY `dest` dials (same Pod).
+  port: 9443
+  certificate:
+    # Let the chart render the cert-manager Certificate for `host`. Off when
+    # that Secret is managed elsewhere; `tlsSecretName` then names it.
+    enabled: true
+    clusterIssuer: letsencrypt-dns
+  # Secret mounted at /etc/origin-tls and projected as <host>.crt / <host>.key.
+  # Empty derives <fullname>-origin-tls, the Secret the Certificate issues.
+  tlsSecretName: ""
+  # The Secret is mounted 0440 and nginx runs as 101, so the kubelet has to
+  # hand it to this group. Pod level, applied only when the sidecar is enabled.
+  fsGroup: 101
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 101
+    seccompProfile:
+      type: RuntimeDefault
+  resources:
+    requests:
+      cpu: 5m
+      memory: 16Mi
+    limits:
+      memory: 64Mi
+
 resources:
   limits:
     cpu: 100m

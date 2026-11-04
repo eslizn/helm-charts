@@ -1,0 +1,25 @@
+{{- /* The origin terminates TLS for the REALITY host, so it needs a
+       certificate. There is no Ingress for cert-manager's ingress-shim to
+       watch (REALITY passes TLS through), hence the explicit Certificate, as
+       in the pgone chart. With certificate.enabled off, the user supplies the
+       Secret named by origin.tlsSecretName. */ -}}
+{{- if and .Values.origin.enabled .Values.origin.certificate.enabled }}
+{{- $host := include "xtls.originHost" . }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "common.fullname" . }}-origin
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  secretName: {{ include "xtls.originTlsSecretName" . }}
+  dnsNames:
+    - {{ $host | quote }}
+  issuerRef:
+    name: {{ .Values.origin.certificate.clusterIssuer }}
+    kind: ClusterIssuer
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always
+{{- end }}

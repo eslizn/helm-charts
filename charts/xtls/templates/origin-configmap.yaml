@@ -1,0 +1,47 @@
+{{- if .Values.origin.enabled }}
+{{- /* $server_name is written through a template variable: "$name" in a Go
+       template is a variable reference, and an undefined one aborts the
+       render. The variable path lets nginx start before the optional Secret
+       exists and reload a renewed certificate per handshake. */ -}}
+{{- $serverName := "$server_name" -}}
+{{- $origin := .Values.origin -}}
+{{- $host := include "xtls.originHost" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.fullname" . }}-origin
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+data:
+  nginx.conf: |
+    worker_processes 1;
+    pid /tmp/nginx.pid;
+    error_log /dev/stderr warn;
+    events {
+      worker_connections 256;
+    }
+    http {
+      access_log off;
+      server_tokens off;
+      client_body_temp_path /tmp/client_body;
+      proxy_temp_path /tmp/proxy;
+      fastcgi_temp_path /tmp/fastcgi;
+      uwsgi_temp_path /tmp/uwsgi;
+      scgi_temp_path /tmp/scgi;
+      server {
+        listen {{ $origin.port }} ssl;
+        http2 on;
+        server_name {{ $host }};
+        ssl_protocols TLSv1.3;
+        ssl_ecdh_curve X25519;
+        ssl_certificate /etc/origin-tls/{{ $serverName }}.crt;
+        ssl_certificate_key /etc/origin-tls/{{ $serverName }}.key;
+        ssl_certificate_cache max=2 inactive=1m valid=1m;
+        ssl_session_tickets off;
+        default_type text/html;
+        location / {
+          return 200 '<!doctype html><html><head><title>Welcome</title></head><body><h1>Welcome</h1></body></html>\n';
+        }
+      }
+    }
+{{- end }}

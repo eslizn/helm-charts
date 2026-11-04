@@ -1101,6 +1101,27 @@ entries:
   xtls:
   - apiVersion: v2
     appVersion: 26.3.27
+    created: "2026-11-04T13:15:25.830592558Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.2
+    description: Xray-core VLESS/REALITY proxy (https://github.com/XTLS/Xray-core)
+    digest: 64043b9ebad196d81561133864c0a5af641c567d390e476f3d2b7b389000b2ce
+    home: https://github.com/XTLS/Xray-core
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: xtls
+    sources:
+    - https://github.com/XTLS/Xray-core
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/xtls-2.0.3/xtls-2.0.3.tgz
+    version: 2.0.3
+  - apiVersion: v2
+    appVersion: 26.3.27
     created: "2026-10-16T15:15:54.604200814Z"
     dependencies:
     - name: common
@@ -1212,4 +1233,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-16T15:15:54.604371902Z"
+generated: "2026-11-04T13:15:25.830703266Z"

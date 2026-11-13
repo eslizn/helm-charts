@@ -205,8 +205,10 @@ futuopend:
 #   made a bare start interactive. -login_pwd_md5 still exists and is used by
 #   this chart's default (verified against the 10.11.7108 binary: it is
 #   accepted by the argument parser and shows up as a live setting in OpenD's
-#   own log line "LogCfg, login_account: (...) login_pwd_md5: ***"). If a
-#   future build drops it, set this to true to fall back to the remembered
+#   own log line "LogCfg, login_account: (...) login_pwd_md5: ***". The
+#   10.12.7208 binary still carries the parameter; re-test the login against a
+#   real account after the upgrade). If a future build drops it, set this to
+#   true to fall back to the remembered
 #   session: log in once by hand (`kubectl exec -it <pod> -- /opt/futuopend/FutuOpenD
 #   -console=1 ...` or through the telnet console), let it write the session
 #   into the PVC, and from then on the chart starts OpenD with

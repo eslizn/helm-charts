@@ -5,7 +5,7 @@
 # The tarball is fetched from Futu's download CDN without any authentication,
 # via the "latest" redirect (https://www.futunn.com/download/fetch-lasted-link
 # ?name=opend-ubuntu) which currently resolves to
-# Futu_OpenD_10.11.7108_Ubuntu18.04.tar.gz. The version is pinned in OPEND_VERSION
+# Futu_OpenD_10.12.7208_Ubuntu18.04.tar.gz. The version is pinned in OPEND_VERSION
 # below rather than following the redirect: the tag has to match Chart.yaml
 # appVersion, and a chart that silently switched OpenD version on rebuild would
 # be worse than one that needs a bump. Bumping OpenD means bumping OPEND_VERSION
@@ -31,7 +31,7 @@
 # Extracting just the CLI directory keeps it out without downloading less.
 FROM debian:bookworm-slim AS fetch
 
-ARG OPEND_VERSION=10.11.7108
+ARG OPEND_VERSION=10.12.7208
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl \
@@ -55,7 +55,7 @@ RUN curl -fsSL -o /tmp/opend.tar.gz \
 # Futu's servers. Alpine does not work: musl is not glibc.
 FROM debian:bookworm-slim
 
-ARG OPEND_VERSION=10.11.7108
+ARG OPEND_VERSION=10.12.7208
 
 LABEL org.opencontainers.image.title="futuopend" \
       org.opencontainers.image.description="Futu OpenD for linux/amd64 - one instance per Futu account" \

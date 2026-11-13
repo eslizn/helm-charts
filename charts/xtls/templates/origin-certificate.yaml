@@ -1,8 +1,8 @@
 {{- /* The origin terminates TLS for the REALITY host, so it needs a
        certificate. There is no Ingress for cert-manager's ingress-shim to
-       watch (REALITY passes TLS through), hence the explicit Certificate, as
-       in the pgone chart. With certificate.enabled off, the user supplies the
-       Secret named by origin.tlsSecretName. */ -}}
+       watch (REALITY passes TLS through), hence the explicit Certificate.
+       With certificate.enabled off, the user supplies the Secret named by
+       origin.tlsSecretName. */ -}}
 {{- if and .Values.origin.enabled .Values.origin.certificate.enabled }}
 {{- $host := include "xtls.originHost" . }}
 apiVersion: cert-manager.io/v1

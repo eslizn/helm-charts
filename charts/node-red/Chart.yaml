@@ -2,12 +2,12 @@ apiVersion: v2
 name: node-red
 description: Node-RED - low-code programming for event-driven applications
 type: application
-version: 0.1.2
+version: 0.1.3
 # Doubles as the default image tag (common.image falls back to appVersion when
 # image.tag is empty). Kept as the full upstream tag, node variant included:
-# 5.0.7-24 = Node-RED 5.0.7 on Node 24/alpine. Plain 5.0.7 and -debian variants
+# 5.0.9-24 = Node-RED 5.0.9 on Node 24/alpine. Plain 5.0.9 and -debian variants
 # exist too, see the chart README.
-appVersion: "5.0.7-24"
+appVersion: "5.0.9-24"
 kubeVersion: ">=1.24.0-0"
 home: https://nodered.org
 sources:

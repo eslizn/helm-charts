@@ -18,14 +18,13 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 
 | Chart | Version | App version | Description |
 |-------|---------|-------------|-------------|
-| [aktools](charts/aktools) | 0.2.4 | 0.0.91 | AKTools - HTTP API for A-share market data |
-| [futuopend](charts/futuopend) | 0.1.0 | 10.11.7108 | Futu OpenD - Futu OpenAPI gateway, one instance per account |
-| [mindsdb](charts/mindsdb) | 2.0.2 | v26.1.0 | MindsDB - AI layer over your database |
-| [node-red](charts/node-red) | 0.1.1 | 5.0.7-24 | Node-RED - low-code programming for event-driven applications |
-| [pgone](charts/pgone) | 0.1.3 | latest | pgone - PostgreSQL wire protocol gateway |
-| [shadowsocks](charts/shadowsocks) | 2.0.1 | v3.3.5 | shadowsocks-libev server |
-| [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.1 | v1.25.0 | shadowsocks-rust server |
-| [xtls](charts/xtls) | 2.0.3 | 26.3.27 | Xray-core VLESS/REALITY proxy |
+| [aktools](charts/aktools) | 0.2.6 | 0.1.7 | AKTools - HTTP API for A-share market data |
+| [futuopend](charts/futuopend) | 0.1.2 | 10.12.7208 | Futu OpenD - Futu OpenAPI gateway, one instance per account |
+| [mindsdb](charts/mindsdb) | 2.0.3 | v26.1.0 | MindsDB - AI layer over your database |
+| [node-red](charts/node-red) | 0.1.3 | 5.0.9-24 | Node-RED - low-code programming for event-driven applications |
+| [shadowsocks](charts/shadowsocks) | 2.0.2 | v3.3.5 | shadowsocks-libev server |
+| [shadowsocks-rust](charts/shadowsocks-rust) | 0.2.2 | v1.25.0 | shadowsocks-rust server |
+| [xtls](charts/xtls) | 2.0.4 | 26.11.9 | Xray-core VLESS/REALITY proxy |
 
 `Version` is the chart artifact version (bumped on every chart change, the
 number `chart-releaser` publishes under), `App version` is the upstream release
@@ -195,6 +194,47 @@ that window fails and is retried by the kubelet.
 
 ## Version history notes
 
+- **2026-11-13** - `pgone` removed from the repository (its already published
+  versions stay installable from the repository index).
+- **2026-11-13** - `xtls` 2.0.4: appVersion 26.3.27 -> 26.11.9 (2026-11-09).
+  This spans two upstream emergency security releases: 26.10.21 removes three
+  compromised root CAs and builds with Go 1.27.3; 26.10.31 disables MPTCP by
+  default because of a Linux kernel IPv4 MPTCP privilege-escalation
+  vulnerability. The chart's VLESS/REALITY config is unchanged: VLESS
+  `settings.clients` is still accepted as an alias for `users`, the REALITY
+  fields and `sockopt.acceptProxyProtocol` are unchanged, and the removed TLS
+  fields (`allowInsecure`, `verifyPeerCertInNames`, `echForceQuery`) are not
+  used here. 26.11.9 also adds XDRIVE transport, MASQUE, Hysteria v2 and
+  Finalmask updates. Two defaults worth knowing: the uTLS fingerprint is now
+  Chrome 155 (client side), and REALITY's `minClientVer` defaults to 26.3.27
+  when unset - this chart leaves it empty, so no client is refused. The chart
+  also now passes `-config /etc/xray/config.json` by default: the upstream
+  image's CMD is `-confdir /usr/local/etc/xray/`, so the Secret mounted at
+  `/etc/xray/` was previously never read unless the release set
+  `workload.args` itself. A user-supplied `workload.args` still replaces the
+  default list.
+- **2026-11-13** - `aktools` 0.2.6: appVersion 0.0.91 -> 0.1.7. The image is
+  rebuilt on python:3.14-slim-trixie, runs as uid 1000, and uses gunicorn with
+  `uvicorn_worker.UvicornWorker`; `requirements.txt` is a fresh freeze
+  (akshare 1.20.40, starlette 1.10.0, mcp 2.3.0). 0.1.x adds the MCP endpoint
+  (`/mcp`), an optional `AKTOOLS_TOKEN` for `/api/` and `/mcp`, result caching,
+  proxy/timeout settings, an interface catalog with CSV/Excel download, and
+  data-source annotations. Breaking: `/api/show` and `/api/show-temp` are gone
+  (404), Python is now >= 3.11.5, `akshare` is >= 1.20.39, and `mcp` is a
+  required dependency. The image sets `AKTOOLS_HOST=0.0.0.0`, so `/mcp` works
+  through a Service/Ingress instead of only loopback.
+- **2026-11-13** - `node-red` 0.1.3: appVersion 5.0.7-24 -> 5.0.9-24.
+  Maintenance releases: 5.0.8 fixes legacy CSV parsing, a WebSocket connection
+  leak on every deploy, a library save race and several editor issues; 5.0.9
+  fixes a comms-auth crash when `adminAuth` is not set, filter node Date
+  handling, CSV/BOM and MQTT connect issues, and adds editor improvements. No
+  breaking changes are listed.
+- **2026-11-13** - `futuopend` 0.1.2: appVersion 10.11.7108 -> 10.12.7208.
+  Futu publishes no changelog for 10.11/10.12 (the official changelog stops at
+  10.10.7008), so the change set is unknown; the 10.12.7208 tarball is dated
+  2026-10-29. The rebuilt binary still carries `-login_pwd_md5` and
+  `-login_by_remember`, but the login path has not been re-tested against a
+  real account on 10.12.7208 - do that before rolling a trading instance.
 - **2026-11-04** - `xtls` 2.0.3: the REALITY fallback origin becomes an
   optional nginx sidecar in the xray Pod (`origin.*`, default off), so the
   separate `xtls-origin` Deployment/Service and its two Pods go away. The
@@ -301,8 +341,10 @@ that window fails and is retried by the kubelet.
   - credentials: OpenD 10.10 removed account/password from `FutuOpenD.xml`, but
     the CLI flags still work - verified against the 10.11.7108 binary, which
     accepts `-login_pwd_md5` (and rejects plaintext `-login_pwd`, so only the
-    MD5 is ever handled) and logs it as a live setting. It goes through a Secret
-    into an env var that `args` reference, so it never appears in the Pod spec.
+    MD5 is ever handled) and logs it as a live setting. The 10.12.7208 binary
+    still carries the parameter; re-test the login after the bump. It goes
+    through a Secret into an env var that `args` reference, so it never appears
+    in the Pod spec.
     `loginByRemember` covers the fallback where a session is bootstrapped by
     hand and reused from the PVC.
   - `telnetPort` is opt-in: it is the only way to answer a device-lock

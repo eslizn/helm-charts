@@ -2,8 +2,8 @@ apiVersion: v2
 name: futuopend
 description: Futu OpenD - gateway for the Futu OpenAPI, one instance per trading account (https://openapi.futunn.com/futu-api-doc/)
 type: application
-version: 0.1.1
-appVersion: "10.11.7108"
+version: 0.1.2
+appVersion: "10.12.7208"
 kubeVersion: ">=1.24.0-0"
 home: https://openapi.futunn.com/futu-api-doc/
 sources:

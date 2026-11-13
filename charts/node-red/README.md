@@ -4,8 +4,8 @@
 `nodered/node-red`，不构建自定义镜像；应用专属的东西（settings.js、额外的 palette
 节点）由 chart 在启动时叠加。
 
-镜像 tag 默认取 `Chart.yaml` 的 `appVersion`（`5.0.7-24` = Node-RED 5.0.7 + Node 24 +
-alpine）。上游同时发布 `5.0.7`、`5.0.7-24`、`5.0.7-debian`、`-minimal` 等变体，
+镜像 tag 默认取 `Chart.yaml` 的 `appVersion`（`5.0.9-24` = Node-RED 5.0.9 + Node 24 +
+alpine）。上游同时发布 `5.0.9`、`5.0.9-24`、`5.0.9-debian`、`-minimal` 等变体，
 `image.tag` 可改。官方镜像不预装任何额外 contrib 节点（只有 node-red 与
 node-red-admin），要什么由 `nodeRed.extraNodes` 装。
 

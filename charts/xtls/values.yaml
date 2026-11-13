@@ -6,9 +6,9 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/xtls/xray-core
-  # Empty falls back to Chart.yaml appVersion (26.3.27, the newest release
-  # upstream does not flag as a prerelease). The image tags drop the leading
-  # "v" of the release tag, so this must not be written as v26.3.27.
+  # Empty falls back to Chart.yaml appVersion (26.11.9). The image tags drop
+  # the leading "v" of the release tag, so this must not be written as
+  # v26.11.9.
   tag: ""
   # Pinned tag, so there is nothing to re-check on every start.
   pullPolicy: IfNotPresent
@@ -31,6 +31,13 @@ securityContext: {}
 # Container level configuration.
 workload:
   kind: Deployment
+  # The upstream image's CMD is `-confdir /usr/local/etc/xray/`, which reads
+  # the image's own built-in config files. Point xray at the chart's Secret
+  # explicitly; without this the config.json mounted at /etc/xray/ is never
+  # read. A user-supplied workload.args replaces this list entirely.
+  args:
+    - -config
+    - /etc/xray/config.json
   ports:
     - name: https
       containerPort: 443
@@ -65,8 +72,9 @@ ingress:
     - websecure
 
 # Xray-core configuration, rendered verbatim as the config.json of the Secret
-# mounted at /etc/xray/ (a Secret, not a ConfigMap: it holds the REALITY private
-# key and the client UUIDs). See https://xtls.github.io/config/ for the schema.
+# mounted at /etc/xray/ and passed to xray with -config (see workload.args).
+# A Secret, not a ConfigMap: it holds the REALITY private key and the client
+# UUIDs. See https://xtls.github.io/config/ for the schema.
 #
 # The two credential placeholders below are empty, and xray does not start
 # without them: the chart still renders (so it stays lintable) but the container

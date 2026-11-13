@@ -8,10 +8,8 @@ image:
   # Not an upstream image: akfamily publishes aktools to PyPI only, so the
   # image is built here, from the context in image/. Every dependency is pinned
   # in image/requirements.txt, because the upstream Dockerfile installs them
-  # all with `--upgrade` and no constraints - and that is what broke the
-  # homepage: fastapi declares only `starlette>=0.46.0`, so an unconstrained
-  # resolve takes starlette 1.x, whose TemplateResponse dropped the
-  # (name, context) signature aktools 0.0.91 still calls (HTTP 500 on /).
+  # all with `--upgrade` and no constraints. The old starlette 1.x hold is
+  # gone: aktools 0.1.x uses the Starlette 1.x TemplateResponse signature.
   #
   # Rebuild from the repository root:
   #   make images.aktools          # tag defaults to appVersion, below
@@ -61,6 +59,10 @@ workload:
     httpGet:
       path: /
       port: http
+
+# 0.1.x adds an optional token for /api/ and /mcp. It is ordinary container
+# configuration, so set it through workload.env (from a Secret) rather than a
+# chart specific key: AKTOOLS_TOKEN.
 
 # Named services: "main" is rendered as <fullname>, other keys as <fullname>-<key>.
 service:

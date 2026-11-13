@@ -38,6 +38,46 @@ jobs:
             helm dependency build "${chart}"
           done
 
+      # Build Images runs in parallel with this workflow on the same push. A
+      # chart whose image is built there must not reach the index before the
+      # image tag exists, or the published chart pins a tag nobody can pull
+      # yet. Wait for every self-built chart's appVersion tag to appear on
+      # Docker Hub; a chart-only change passes immediately because the tag is
+      # already there. This fails the release rather than publishing a chart
+      # whose image never arrives. The 40 minute budget covers an arm64 build
+      # under QEMU plus the Futu tarball download.
+      - name: Wait for self-built images
+        run: |
+          set -euo pipefail
+          repo="$(sed -n 's/^REPO[[:space:]]*?=[[:space:]]*//p' Makefile)"
+          repo="${repo#docker.io/}"
+          if [ -z "$repo" ]; then
+            echo "no REPO in Makefile" >&2
+            exit 1
+          fi
+          for chart in charts/*/; do
+            [ -f "${chart}image/Dockerfile" ] || continue
+            name="$(basename "$chart")"
+            tag="$(sed -n 's/^appVersion:[[:space:]]*//p' "${chart}Chart.yaml" | tr -d '"')"
+            if [ -z "$tag" ]; then
+              echo "no appVersion in ${chart}Chart.yaml" >&2
+              exit 1
+            fi
+            url="https://hub.docker.com/v2/repositories/${repo}/${name}/tags/${tag}/"
+            echo "==> waiting for ${repo}/${name}:${tag}"
+            for attempt in $(seq 1 240); do
+              if curl -fs --max-time 20 -o /dev/null "$url"; then
+                echo "found ${repo}/${name}:${tag}"
+                break
+              fi
+              if [ "$attempt" -eq 240 ]; then
+                echo "timed out waiting for ${repo}/${name}:${tag}" >&2
+                exit 1
+              fi
+              sleep 10
+            done
+          done
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
         with:

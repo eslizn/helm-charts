@@ -22,8 +22,10 @@ helm install deepseek-harness eslizn/deepseek-harness -n dsh --create-namespace
 默认值会：
 
 - 创建一个单副本 StatefulSet；
-- 创建一个 10Gi 的 RWO PVC，`$DSH_HOME`、`/workspace` 和 `/home/dsh/.agents` 用三个
-  subPath 共享它；
+- 创建一个 10Gi 的 RWO PVC，默认放整个 `$DSH_HOME`（配置、凭据、插件、会话、
+  storages）和 `/home/dsh/.agents`（用户级 `AGENTS.md`/`skills`）；
+- **不持久化主工作区**：容器里的 `/workspace` 只是初始 cwd，实际项目目录在 Web UI
+  里按 session 选择；需要复用 PVC 时才开 `dsh.workspace.persistent`；
 - 不创建 Ingress。
 
 首次访问需要从日志里取带一次性 token 的启动 URL：
@@ -118,32 +120,57 @@ TLS 和访问控制后面。
 
 默认一个 PVC 承载全部状态，用两个 subPath 分开：
 
-| subPath | 挂载点 | 内容 |
-|---------|--------|------|
-| `dsh` | `/home/dsh/.dsh` | 配置、`.credentials.yaml`、`profiles/`（插件与 profile 设置）、`sessions/`、`storages/`、日志与缓存 |
-| `workspace` | `/workspace` | agent 的工作目录 |
-| `agents` | `/home/dsh/.agents` | 共享 agent 根（`DSH_AGENTS_HOME`）：用户级 `AGENTS.md`、`skills/` |
+| subPath | 挂载点 | 内容 | 默认 |
+|---------|--------|------|------|
+| `dsh` | `/home/dsh/.dsh` | 配置、`.credentials.yaml`、`profiles/`（插件与 profile 设置）、`sessions/`、`storages/`、日志与缓存 | 是 |
+| `agents` | `/home/dsh/.agents` | 共享 agent 根（`DSH_AGENTS_HOME`）：用户级 `AGENTS.md`、`skills/` | 是 |
+| `workspace` | `/workspace` | agent 的工作目录 | **否**，需要 `dsh.workspace.persistent=true` |
 
-一个 initContainer 在主容器启动前创建这些 subPath；它和主容器一样以非 root
+一个 initContainer 在主容器启动前创建已启用的 subPath；它和主容器一样以非 root
 （uid/gid 10001）运行。卷根目录必须对这个 uid/fsGroup 可写，chart 默认设置
 `podSecurityContext.fsGroup: 10001`。如果存储类不执行 fsGroup（例如某些 NFS），
 initContainer 会失败并打印明确提示。
 
-可选组合：
+### 主工作区
+
+默认 `dsh.workspace.persistent=false`：`/workspace` 只是进程启动时的 cwd，没有挂
+PVC。实际项目目录在 Web UI 里按 session 选择（目录选择器可以浏览容器文件系统）；
+DSH 会把选择记录在 `$DSH_HOME/storages`，所以重启后路径还记得，但路径上的文件只有
+在挂载卷上才保留。`workspace-write` 的写边界跟随 session 创建时记录的 cwd，因此选
+容器内哪个可写目录都可以。两种持久化方式：
 
 ```yaml
-persistence:
-  enabled: false          # 全部临时：配置、插件、会话、工作区都随 Pod 重启丢失
-
-# 或：只持久化 $DSH_HOME，工作区和 agents 临时
+# 复用同一个 PVC 的 workspace/ subPath
 dsh:
   workspace:
-    persistent: false
+    persistent: true
+```
+
+或者保持 false，用 `workload.volumeMounts` 把自己的卷挂到实际工作区路径（例如
+`/workspace`），目录选择器里选该路径。
+
+常用组合：
+
+```yaml
+# 默认：$DSH_HOME（配置/插件/凭据/会话）+ agents 持久化，主工作区临时。
+
+# 把主工作区也放到同一个 PVC：
+dsh:
+  workspace:
+    persistent: true
+
+# 或：全部临时
+persistence:
+  enabled: false
+
+# 或：agents 也临时，只保留 $DSH_HOME
+dsh:
   agents:
     persistent: false
 ```
 
-`persistence.size` 同时覆盖配置、工作区和 agents home，默认 `10Gi`。PVC 由 chart
+`persistence.size` 默认覆盖 `$DSH_HOME` 和 agents home，`10Gi`；开启
+`dsh.workspace.persistent` 后工作区也计入同一 PVC，按需调大。PVC 由 chart
 单独创建，名称是 Helm fullname（通常是 release + chart），**不是** StatefulSet 的
 claim template —— 后者会把 chart 版本
 写进不可变的 `volumeClaimTemplates` 标签里，下一次 chart 版本升级就可能被 API server
@@ -279,6 +306,9 @@ docker buildx build \
 - **Ingress 端口本身没有认证**：dsh 的 token 保护 UI/API，不保护监听端口。务必用
   TLS + 网络策略/外部认证限制来源。
 - **沙箱依赖内核/运行时**：见 `dsh.permissionMode` 一节。
+- **主工作区默认不持久化**：`dsh.workspace.persistent=false`；项目文件只有在开启
+  `workspace` subPath 或自己用 `workload.volumeMounts` 挂卷时才保留。Web UI 里选择的
+  路径本身会记录在 `$DSH_HOME/storages`，但目录内容不会。
 - **PVC 保留**：`persistence.keep=true`（默认）时，`helm uninstall` 不删除 PVC，
   这是有意的数据保护；确认不再需要后再手动删除。设 `keep=false` 可让 Helm 随 release
   删除 PVC。

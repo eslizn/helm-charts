@@ -136,14 +136,17 @@ ingress:
           pathType: Prefix
   tls: []
 
-# One standalone PVC for everything the harness owns. When enabled:
-#   - $DSH_HOME is mounted from subPath "dsh" (config, credentials, plugins,
-#     sessions, stores);
-#   - /workspace is mounted from subPath "workspace" when
-#     dsh.workspace.persistent is true (the default), so project files share
-#     the same claim without being visible under $DSH_HOME.
-# An init container creates both subdirectories before the main container
-# starts.
+# One standalone PVC for the harness's persisted state. By default it carries
+# the whole $DSH_HOME and the shared agents root:
+#   - $DSH_HOME is mounted from subPath "dsh" (configuration, credentials,
+#     plugins, sessions, stores);
+#   - the shared agents root is mounted from subPath "agents" when
+#     dsh.agents.persistent is true (the default).
+# The main workspace is NOT persisted by default: pick the working directory
+# in the Web UI, or set dsh.workspace.persistent=true to add a "workspace"
+# subPath to the same claim.
+# An init container creates every mounted subdirectory before the main
+# container starts.
 #
 # The PVC is a separate resource rather than the StatefulSet's claim template:
 # a claim template carries the chart version in its labels and
@@ -155,7 +158,8 @@ persistence:
   storageClass: ""
   accessModes:
     - ReadWriteOnce
-  # Sized for sessions, plugins, the workspace and the agents home together.
+  # Sized for sessions, plugins and the agents home. Enable
+  # dsh.workspace.persistent and raise this when the workspace also lives here.
   size: 10Gi
   # Must equal dsh.home (the chart refuses to render otherwise).
   mountPath: /home/dsh/.dsh
@@ -227,13 +231,18 @@ dsh:
   permissionMode: ""
 
   workspace:
-    # Agent working directory and the process cwd dsh starts in.
+    # Agent working directory and the process cwd dsh starts in. With the
+    # default persistent=false this is just the container's /workspace; the
+    # actual project directory is chosen per session in the Web UI.
     mountPath: /workspace
     # Subdirectory of the persistence PVC mounted at mountPath. Must differ
-    # from persistence.subPath and dsh.agents.subPath.
+    # from persistence.subPath and dsh.agents.subPath. Only used when
+    # persistent=true.
     subPath: workspace
-    # false keeps $DSH_HOME on the PVC but makes the workspace ephemeral.
-    persistent: true
+    # false (default) keeps the main workspace out of the PVC: it is ephemeral
+    # unless you mount your own volume or enable this subPath. true puts the
+    # workspace on the same claim as the config and plugins.
+    persistent: false
 
   agents:
     # Shared agent root resolved from DSH_AGENTS_HOME: user-level AGENTS.md and

@@ -34,7 +34,9 @@ DeepSeek Harness {{ .Chart.AppVersion }} is deployed.
 {{- end }}
    Config, credentials, plugins, sessions and the mounted paths survive a restart.
 {{- if not .Values.dsh.workspace.persistent }}
-   The workspace is ephemeral (dsh.workspace.persistent=false).
+   The main workspace is not persisted (dsh.workspace.persistent=false).
+   Choose the project directory per session in the Web UI, or mount your own
+   volume there.
 {{- end }}
 {{- if not .Values.dsh.agents.persistent }}
    The agents home is ephemeral (dsh.agents.persistent=false).

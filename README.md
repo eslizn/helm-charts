@@ -19,7 +19,7 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 | Chart | Version | App version | Description |
 |-------|---------|-------------|-------------|
 | [aktools](charts/aktools) | 0.2.6 | 0.1.7 | AKTools - HTTP API for A-share market data |
-| [deepseek-harness](charts/deepseek-harness) | 0.1.0 | 0.2.2-rc.5 | DeepSeek Harness - plugin-based coding agent with a Web UI |
+| [deepseek-harness](charts/deepseek-harness) | 0.1.1 | 0.2.2-rc.5 | DeepSeek Harness - plugin-based coding agent with a Web UI |
 | [futuopend](charts/futuopend) | 0.1.2 | 10.12.7208 | Futu OpenD - Futu OpenAPI gateway, one instance per account |
 | [mindsdb](charts/mindsdb) | 2.0.3 | v26.1.0 | MindsDB - AI layer over your database |
 | [node-red](charts/node-red) | 0.1.3 | 5.0.9-24 | Node-RED - low-code programming for event-driven applications |
@@ -199,6 +199,10 @@ that window fails and is retried by the kubelet.
 
 ## Version history notes
 
+- **2026-11-23** - `deepseek-harness` 0.1.1: by default only `$DSH_HOME`
+  (config, credentials, plugins, sessions) and the shared agents home are
+  persisted. The main workspace is chosen per session in the Web UI; set
+  `dsh.workspace.persistent=true` to put it on the same PVC.
 - **2026-11-23** - new `deepseek-harness` chart (DeepSeek Harness Web UI,
   self-built from the official npm package). The image tag follows appVersion
   `0.2.2-rc.5`; npm `latest` is a pre-release, so the Dockerfile pins an exact

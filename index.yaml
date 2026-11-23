@@ -197,6 +197,29 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/common-0.1.0/common-0.1.0.tgz
     version: 0.1.0
+  deepseek-harness:
+  - apiVersion: v2
+    appVersion: 0.2.2-rc.5
+    created: "2026-11-23T05:11:28.904681132Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.1.2
+    description: DeepSeek Harness (dsh) - plugin-based coding agent with a Web UI
+    digest: 0ef7ba09b2f93d49ee3ea99b9406b29d9abd931423e10a6c06ea0d07c344ac40
+    home: https://github.com/deepseek-ai/deepseek-harness
+    kubeVersion: '>=1.24.0-0'
+    maintainers:
+    - name: eslizn
+      url: https://github.com/eslizn
+    name: deepseek-harness
+    sources:
+    - https://github.com/deepseek-ai/deepseek-harness
+    - https://deepseek-harness.github.io/deepseek-harness/
+    type: application
+    urls:
+    - https://github.com/eslizn/helm-charts/releases/download/deepseek-harness-0.1.0/deepseek-harness-0.1.0.tgz
+    version: 0.1.0
   futuopend:
   - apiVersion: v2
     appVersion: 10.12.7208
@@ -1319,4 +1342,4 @@ entries:
     urls:
     - https://github.com/eslizn/helm-charts/releases/download/xtls-0.1.0/xtls-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-13T09:37:26.823835626Z"
+generated: "2026-11-23T05:11:28.904819537Z"

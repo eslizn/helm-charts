@@ -1,0 +1,49 @@
+{{- $fullname := include "common.fullname" . -}}
+{{- $claimName := .Values.persistence.existingClaim | default $fullname -}}
+{{- $publicUrl := include "deepseek-harness.publicUrl" . -}}
+DeepSeek Harness {{ .Chart.AppVersion }} is deployed.
+
+1. Open the Web UI. dsh prints a launch URL carrying a one-time token; the
+   browser exchanges it for a signed cookie and keeps that for 30 days:
+
+     kubectl -n {{ .Release.Namespace }} logs statefulset/{{ $fullname }} | grep 'dsh web: http'
+{{ if $publicUrl }}
+   Open the printed URL once. The chart advertises {{ $publicUrl }} and accepts
+   it through the browser-trust fence.
+{{- else }}
+   No Ingress is configured. Forward the service port and replace the printed
+   host with 127.0.0.1, keeping the token:
+
+     kubectl -n {{ .Release.Namespace }} port-forward svc/{{ $fullname }} {{ .Values.service.main.port }}:{{ .Values.service.main.port }}
+
+     http://127.0.0.1:{{ .Values.service.main.port }}/?token=<token>
+{{- end }}
+
+   The token is a credential: anyone who can read the pod logs can use the
+   UI until the cookie expires or the credential record is replaced.
+
+2. Persistence:
+{{- if .Values.persistence.enabled }}
+   Backed by the {{ $claimName }} PVC:
+     - $DSH_HOME ({{ .Values.dsh.home }}) at subPath {{ .Values.persistence.subPath | default "(root)" }}
+{{- if .Values.dsh.workspace.persistent }}
+     - workspace ({{ .Values.dsh.workspace.mountPath }}) at subPath {{ .Values.dsh.workspace.subPath }}
+{{- end }}
+{{- if .Values.dsh.agents.persistent }}
+     - agents home ({{ .Values.dsh.agents.home }}) at subPath {{ .Values.dsh.agents.subPath }}
+{{- end }}
+   Config, credentials, plugins, sessions and the mounted paths survive a restart.
+{{- if not .Values.dsh.workspace.persistent }}
+   The workspace is ephemeral (dsh.workspace.persistent=false).
+{{- end }}
+{{- if not .Values.dsh.agents.persistent }}
+   The agents home is ephemeral (dsh.agents.persistent=false).
+{{- end }}
+{{- else }}
+   Persistence is disabled: config, credentials, plugins, sessions, the
+   workspace and the agents home are discarded when the Pod restarts.
+{{- end }}
+
+3. Security: the agent executes arbitrary commands inside the Pod. The built-in
+   token protects the UI/API, not the exposed port. Put TLS and an access
+   control layer in front of any Ingress. See the chart README.

@@ -1,0 +1,248 @@
+# Default values for deepseek-harness.
+# The schema is shared by every chart in this repository: see
+# ../common/templates/_helpers.tpl and the repository README.
+#
+# DeepSeek Harness (dsh) is a plugin-based agent harness. Everything it owns
+# lives under $DSH_HOME: profiles (plugins and their settings), credentials,
+# session logs, and the durable key-value stores. The chart runs one dsh
+# process behind a StatefulSet; there is no meaningful multi-replica mode
+# because each process has its own cookie-signing secret and profile tree.
+
+# Exactly one process per release: a second replica would run a second dsh
+# with its own credential file and plugin directory. The chart fails the
+# render on any other value rather than silently ignoring it.
+replicaCount: 1
+
+image:
+  # Not an upstream image: DeepSeek publishes no Docker image, only the npm
+  # package @deepseek-ai/dsh. The image is built here from the official npm
+  # install, from the context in image/.
+  #
+  # Rebuild from the repository root:
+  #   make images.deepseek-harness     # tag defaults to appVersion, below
+  #
+  # The Build Images workflow runs the same target on every push that touches
+  # image/. Any image change also has to bump version in Chart.yaml in the same
+  # commit: chart-releaser truncates image/... back to the chart directory when
+  # deciding what changed.
+  #
+  # Pushing over the tag that is already deployed rolls nothing: the rendered
+  # manifest is unchanged, so Argo CD sees no diff, and a node holding the old
+  # image under that tag will not pull again under IfNotPresent. After such a
+  # push, drop the cached image on every node that runs it - kubectl debug
+  # node/<node>, then `crictl rmi docker.io/eslizn/deepseek-harness:<tag>` -
+  # and delete the Pod so it is recreated and re-pulls.
+  repository: docker.io/eslizn/deepseek-harness
+  # Empty falls back to Chart.yaml appVersion, which must equal the
+  # DSH_VERSION pin in image/Dockerfile.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  # The harness needs no Kubernetes API access, and its bash tool can run
+  # arbitrary commands inside the container. Do not hand it a token unless the
+  # workload is deliberately meant to drive the cluster.
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+# The image runs as uid/gid 10001 (dsh). fsGroup makes the PVC writable for
+# that user; the init container fails with a clear message when the storage
+# class does not honor it.
+podSecurityContext:
+  fsGroup: 10001
+  # A workspace can hold many files; without this kubelet would recursively
+  # chown the whole PVC on every Pod start.
+  fsGroupChangePolicy: OnRootMismatch
+# Matches the deepseek-harness image's own non-root user (uid/gid 10001).
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+# Non-secret environment variables, rendered into a ConfigMap and injected
+# with envFrom. DEEPSEEK_API_KEY belongs in the secret section below (or in the
+# Web UI, which writes $DSH_HOME/.credentials.yaml).
+env: {}
+
+# Credentials, rendered into a Secret and injected with envFrom.
+# create=false and existingSecret="" means no Secret is rendered or referenced.
+secret:
+  create: false
+  existingSecret: ""
+  data: {}
+
+# Container level configuration.
+workload:
+  # Only StatefulSet is supported: it gives the single Pod a stable identity
+  # and, with the default RWO claim, a rollout that replaces the old Pod
+  # before the new one needs the volume. The chart fails the render on any
+  # other kind.
+  kind: StatefulSet
+  ports:
+    - name: http
+      containerPort: 3080
+      protocol: TCP
+  # The container binds the Pod IP, so these probes reach dsh directly.
+  livenessProbe:
+    tcpSocket:
+      port: http
+    periodSeconds: 20
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readinessProbe:
+    tcpSocket:
+      port: http
+    periodSeconds: 10
+    timeoutSeconds: 3
+  # First start initializes the profile tree in $DSH_HOME; the budget is
+  # deliberately generous so a slow volume does not restart-loop the Pod.
+  startupProbe:
+    tcpSocket:
+      port: http
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 60
+
+# Named services: "main" is rendered as <fullname>, other keys as <fullname>-<key>.
+service:
+  main:
+    type: ClusterIP
+    port: 3080
+    targetPort: http
+    portName: http
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: deepseek-harness.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# One standalone PVC for everything the harness owns. When enabled:
+#   - $DSH_HOME is mounted from subPath "dsh" (config, credentials, plugins,
+#     sessions, stores);
+#   - /workspace is mounted from subPath "workspace" when
+#     dsh.workspace.persistent is true (the default), so project files share
+#     the same claim without being visible under $DSH_HOME.
+# An init container creates both subdirectories before the main container
+# starts.
+#
+# The PVC is a separate resource rather than the StatefulSet's claim template:
+# a claim template carries the chart version in its labels and
+# volumeClaimTemplates is immutable, so every chart bump could otherwise be
+# rejected on upgrade. A standalone PVC also supports existingClaim and
+# resizing.
+persistence:
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  # Sized for sessions, plugins, the workspace and the agents home together.
+  size: 10Gi
+  # Must equal dsh.home (the chart refuses to render otherwise).
+  mountPath: /home/dsh/.dsh
+  subPath: dsh
+  # Pod volume name; not the PVC name.
+  volumeName: data
+  # Mount a claim you manage instead of the chart's own. When set, no PVC is
+  # created regardless of create.
+  existingClaim: ""
+  # false means bring your own claim; existingClaim must then be non-empty.
+  create: true
+  # Keep the chart-created PVC after `helm uninstall` (resource-policy keep).
+  keep: true
+  # Added to the chart-created PVC metadata. Ignored with existingClaim.
+  annotations: {}
+
+# Extra raw arguments appended after the arguments the entrypoint derives.
+# They reach `dsh --profile web` verbatim, e.g. ["--trusted-host", "dsh.example"].
+# The entrypoint owns --profile, --no-open, --host and --port. Do not repeat
+# --profile (the launcher accepts it only once); repeating a plain option such
+# as --host or --port lets the later value win.
+# args: []
+#
+# Extra volumes/mounts/initContainers are appended to the chart's own; see the
+# repository README for the shared workload schema.
+
+resources: {}
+
+# Not supported: a second replica is a second dsh with its own state. The
+# chart fails the render when this is enabled.
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# DeepSeek Harness specific configuration.
+dsh:
+  # Harness home. With persistence.enabled this is the PVC mount path and must
+  # equal persistence.mountPath.
+  home: /home/dsh/.dsh
+
+  web:
+    # Advertised HTTP(S) root, e.g. https://dsh.example.com/. It is what the
+    # startup URL and DSH_WEB_URL use, and it grants no trust: the authority
+    # must also be listed in trustedHosts (the chart adds the ingress hosts and
+    # this URL's host automatically).
+    #
+    # Empty + ingress.enabled + path "/" derives
+    # <scheme>://<first ingress host>/ (https when ingress.tls is non-empty).
+    # A non-root ingress path requires this to be set explicitly, because the
+    # proxy must strip the prefix for dsh to see its own root.
+    publicUrl: ""
+    # Extra authorities accepted by the /api Host/Origin fence, as host or
+    # host:port entries. The chart always adds every ingress host; use this for
+    # a LoadBalancer hostname, a wildcard ingress's concrete hosts, or a
+    # port-forward host you reach through a proxy.
+    trustedHosts: []
+
+  # Default permission mode for new sessions: "", read-only, workspace-write
+  # (upstream default), or danger-full-access. The Web UI can change it per
+  # session. workspace-write needs bwrap or Landlock inside the container; if
+  # the cluster blocks both, the bash tool fails closed and danger-full-access
+  # (with the container itself as the boundary) is the fallback.
+  permissionMode: ""
+
+  workspace:
+    # Agent working directory and the process cwd dsh starts in.
+    mountPath: /workspace
+    # Subdirectory of the persistence PVC mounted at mountPath. Must differ
+    # from persistence.subPath and dsh.agents.subPath.
+    subPath: workspace
+    # false keeps $DSH_HOME on the PVC but makes the workspace ephemeral.
+    persistent: true
+
+  agents:
+    # Shared agent root resolved from DSH_AGENTS_HOME: user-level AGENTS.md and
+    # skills/, deliberately outside $DSH_HOME. The image defaults it to
+    # ~/.agents; when persistence is enabled it becomes a third subPath on the
+    # same PVC.
+    home: /home/dsh/.agents
+    # Must differ from persistence.subPath and dsh.workspace.subPath.
+    subPath: agents
+    # false keeps it ephemeral, or lets you mount a shared volume yourself at
+    # home through workload.volumeMounts.
+    persistent: true

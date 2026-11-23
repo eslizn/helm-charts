@@ -1,0 +1,21 @@
+apiVersion: v2
+name: deepseek-harness
+description: DeepSeek Harness (dsh) - plugin-based coding agent with a Web UI
+type: application
+version: 0.1.0
+# Doubles as the default image tag (common.image falls back to appVersion when
+# image.tag is empty). The image is built from the npm package pinned by
+# image/Dockerfile ARG DSH_VERSION; bump both together.
+appVersion: "0.2.2-rc.5"
+kubeVersion: ">=1.24.0-0"
+home: https://github.com/deepseek-ai/deepseek-harness
+sources:
+  - https://github.com/deepseek-ai/deepseek-harness
+  - https://deepseek-harness.github.io/deepseek-harness/
+maintainers:
+  - name: eslizn
+    url: https://github.com/eslizn
+dependencies:
+  - name: common
+    version: 0.1.2
+    repository: file://../common

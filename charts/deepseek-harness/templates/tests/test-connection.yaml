@@ -1,0 +1,23 @@
+{{/* The service port forwards to dsh's listener on the Pod IP. A plain TCP
+       connect is enough; the HTTP root answers 401 without a launch token, so
+       an HTTP probe would report a healthy server as failed. */}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "common.fullname" . }}-test-connection"
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: netcat
+      image: busybox
+      command: ['nc']
+      args:
+        - '-z'
+        - '-w'
+        - '5'
+        - '{{ include "common.fullname" . }}'
+        - '{{ .Values.service.main.port | toString }}'
+  restartPolicy: Never

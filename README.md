@@ -19,6 +19,7 @@ helm install my-release eslizn/<chart> -n <namespace> --create-namespace -f my-v
 | Chart | Version | App version | Description |
 |-------|---------|-------------|-------------|
 | [aktools](charts/aktools) | 0.2.6 | 0.1.7 | AKTools - HTTP API for A-share market data |
+| [deepseek-harness](charts/deepseek-harness) | 0.1.0 | 0.2.2-rc.5 | DeepSeek Harness - plugin-based coding agent with a Web UI |
 | [futuopend](charts/futuopend) | 0.1.2 | 10.12.7208 | Futu OpenD - Futu OpenAPI gateway, one instance per account |
 | [mindsdb](charts/mindsdb) | 2.0.3 | v26.1.0 | MindsDB - AI layer over your database |
 | [node-red](charts/node-red) | 0.1.3 | 5.0.9-24 | Node-RED - low-code programming for event-driven applications |
@@ -53,8 +54,8 @@ charts/
 Every chart exposes the same top level keys, so a values file that works for one
 chart transfers to the others. What changes per chart is the app specific
 sections (`shadowsocks.*`, `kcptun.*`, `xtls.options`, `xtls.origin`,
-`mindsdb.*`, `nodeRed.*`, `futuopend.*`) plus, for a chart that runs one
-instance per item rather than one per release, the list that drives it -
+`mindsdb.*`, `nodeRed.*`, `futuopend.*`, `dsh.*`) plus, for a chart that runs
+one instance per item rather than one per release, the list that drives it -
 `futuopend.accounts` renders one Deployment/Service/PVC/Secret set per account.
 
 ```yaml
@@ -169,12 +170,16 @@ deciding what to package, so the release workflow would rebuild the current
 version and try to publish it again, which GitHub rejects. Bump `Chart.yaml`
 `version` in the same commit as any change under `image/`.
 
-`charts/aktools` and `charts/futuopend` are the charts that build an image
-today. Both are built from an upstream artifact rather than from source:
-`aktools` from PyPI, `futuopend` from Futu's download CDN, which needs no
-credentials (the OpenD tarball is a public bucket) but is reachable only from
-wherever Futu's CDN answers - if a CI runner cannot fetch it, build that image
-locally with the same `make images.futuopend` target.
+`charts/aktools`, `charts/futuopend` and `charts/deepseek-harness` are the
+charts that build an image today. All three are built from an upstream artifact
+rather than from source: `aktools` from PyPI, `futuopend` from Futu's download
+CDN, and `deepseek-harness` from the official `@deepseek-ai/dsh` npm package
+(DeepSeek publishes no Docker image). The first two need their hosts to be
+reachable from the build environment; if a CI runner cannot fetch one, build
+that image locally with the same `make images.<chart>` target. The npm package
+can be fetched through a mirror by passing `--build-arg NPM_REGISTRY=...` to a
+local `docker buildx build`; the `Makefile` target itself uses the Dockerfile
+default.
 
 ## Releasing
 
@@ -194,6 +199,10 @@ that window fails and is retried by the kubelet.
 
 ## Version history notes
 
+- **2026-11-23** - new `deepseek-harness` chart (DeepSeek Harness Web UI,
+  self-built from the official npm package). The image tag follows appVersion
+  `0.2.2-rc.5`; npm `latest` is a pre-release, so the Dockerfile pins an exact
+  version instead of following the dist-tag.
 - **2026-11-13** - `pgone` removed from the repository (its already published
   versions stay installable from the repository index).
 - **2026-11-13** - `xtls` 2.0.4: appVersion 26.3.27 -> 26.11.9 (2026-11-09).

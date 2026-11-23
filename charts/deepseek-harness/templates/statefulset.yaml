@@ -1,0 +1,144 @@
+{{- include "deepseek-harness.validate" . -}}
+
+{{- $persistence := .Values.persistence -}}
+{{- $workspace := .Values.dsh.workspace -}}
+{{- $agents := .Values.dsh.agents -}}
+{{- $volumeName := $persistence.volumeName | default "data" -}}
+
+{{- /* The container port is also the port the entrypoint and the loopback
+       port-forward proxy use. */ -}}
+{{- $port := 3080 -}}
+{{- $ports := .Values.workload.ports | default list -}}
+{{- if $ports -}}
+{{- $port = (first $ports).containerPort | default 3080 -}}
+{{- end -}}
+
+{{- /* The PVC is mounted explicitly below instead of through
+       common.container's persistence shortcut: the shared template would use
+       StatefulSet volumeClaimTemplates, which embeds the chart version in
+       immutable labels and breaks on the next chart bump. */ -}}
+{{- $volumeMounts := deepCopy (.Values.workload.volumeMounts | default list) -}}
+{{- $volumes := deepCopy (.Values.workload.volumes | default list) -}}
+{{- if $persistence.enabled -}}
+{{- $claimName := $persistence.existingClaim | default (include "common.fullname" .) -}}
+{{- $volumes = append $volumes (dict "name" $volumeName "persistentVolumeClaim" (dict "claimName" $claimName)) -}}
+{{- $dshMount := dict "name" $volumeName "mountPath" $persistence.mountPath -}}
+{{- if $persistence.subPath -}}
+{{- $_ := set $dshMount "subPath" $persistence.subPath -}}
+{{- end -}}
+{{- $volumeMounts = append $volumeMounts $dshMount -}}
+{{- if $workspace.persistent -}}
+{{- $volumeMounts = append $volumeMounts (dict "name" $volumeName "mountPath" $workspace.mountPath "subPath" $workspace.subPath) -}}
+{{- end -}}
+{{- if $agents.persistent -}}
+{{- $volumeMounts = append $volumeMounts (dict "name" $volumeName "mountPath" $agents.home "subPath" $agents.subPath) -}}
+{{- end -}}
+{{- end -}}
+
+{{- /* A subPath mount requires the directory to exist before the Pod starts.
+       The init container mounts the claim root and creates every non-empty
+       subPath; it runs as the same non-root user as the main container. */ -}}
+{{- $initContainers := list -}}
+{{- $dirs := list -}}
+{{- if $persistence.subPath -}}
+{{- $dirs = append $dirs (printf "/mnt/data/%s" $persistence.subPath) -}}
+{{- end -}}
+{{- if and $workspace.persistent $workspace.subPath -}}
+{{- $dirs = append $dirs (printf "/mnt/data/%s" $workspace.subPath) -}}
+{{- end -}}
+{{- if and $agents.persistent $agents.subPath -}}
+{{- $dirs = append $dirs (printf "/mnt/data/%s" $agents.subPath) -}}
+{{- end -}}
+{{- if and $persistence.enabled $dirs -}}
+{{- $script := printf "set -eu\nmkdir -p %s || { echo 'init-data: cannot create the PVC subdirectories; set podSecurityContext.fsGroup to the container gid (10001)' >&2; exit 1; }\n" (join " " $dirs) -}}
+{{- $init := dict
+      "name" "init-data"
+      "image" (include "common.image" .)
+      "imagePullPolicy" (.Values.image.pullPolicy | default "IfNotPresent")
+      "command" (list "sh" "-c")
+      "args" (list $script)
+      "volumeMounts" (list (dict "name" $volumeName "mountPath" "/mnt/data")) -}}
+{{- with .Values.securityContext -}}
+{{- $_ := set $init "securityContext" . -}}
+{{- end -}}
+{{- $initContainers = append $initContainers $init -}}
+{{- end -}}
+{{- range (.Values.workload.initContainers | default list) -}}
+{{- $initContainers = append $initContainers . -}}
+{{- end -}}
+
+{{- /* User environment comes first so the chart's reserved values win if a
+       name is duplicated. Values from env/envFrom ConfigMaps and Secrets are
+       injected before the explicit env list and therefore also lose to it. */ -}}
+{{- $env := list -}}
+{{- range (.Values.workload.env | default list) -}}
+{{- $env = append $env . -}}
+{{- end -}}
+{{- $env = append $env (dict "name" "POD_IP" "valueFrom" (dict "fieldRef" (dict "apiVersion" "v1" "fieldPath" "status.podIP"))) -}}
+{{- $env = append $env (dict "name" "DSH_HOME" "value" .Values.dsh.home) -}}
+{{- $env = append $env (dict "name" "DSH_WORKSPACE" "value" .Values.dsh.workspace.mountPath) -}}
+{{- $env = append $env (dict "name" "DSH_AGENTS_HOME" "value" .Values.dsh.agents.home) -}}
+{{- $env = append $env (dict "name" "DSH_WEB_PORT" "value" (toString $port)) -}}
+{{- $publicUrl := include "deepseek-harness.publicUrl" . -}}
+{{- if $publicUrl -}}
+{{- $env = append $env (dict "name" "DSH_PUBLIC_URL" "value" $publicUrl) -}}
+{{- end -}}
+{{- $trustedHosts := include "deepseek-harness.trustedHosts" . -}}
+{{- if $trustedHosts -}}
+{{- $env = append $env (dict "name" "DSH_TRUSTED_HOSTS" "value" $trustedHosts) -}}
+{{- end -}}
+{{- if .Values.dsh.permissionMode -}}
+{{- $env = append $env (dict "name" "DSH_PERMISSION_MODE" "value" .Values.dsh.permissionMode) -}}
+{{- end -}}
+
+{{- $envFrom := list -}}
+{{- if .Values.env -}}
+{{- $envFrom = append $envFrom (dict "configMapRef" (dict "name" (include "deepseek-harness.envConfigMapName" .))) -}}
+{{- end -}}
+{{- if or .Values.secret.create .Values.secret.existingSecret -}}
+{{- $envFrom = append $envFrom (dict "secretRef" (dict "name" (include "deepseek-harness.secretName" .))) -}}
+{{- end -}}
+{{- range (.Values.workload.envFrom | default list) -}}
+{{- $envFrom = append $envFrom . -}}
+{{- end -}}
+
+{{- /* envFrom is read once at process start and the public URL is passed as an
+       argument, so a configuration edit otherwise only rewrites a ConfigMap or
+       Secret and never rolls the Pod (under Argo CD nothing else would). */ -}}
+{{- $podAnnotations := deepCopy (.Values.podAnnotations | default dict) -}}
+{{- $_ := set $podAnnotations "checksum/deepseek-harness-config" (list
+      (.Values.env | default dict | toJson)
+      (.Values.secret.data | default dict | toJson)
+      (.Values.secret.existingSecret | default "")
+      $publicUrl
+      $trustedHosts
+      (.Values.dsh.permissionMode | default "")
+      (.Values.dsh.home | default "")
+      (.Values.dsh.workspace.mountPath | default "")
+      (toString .Values.dsh.workspace.persistent)
+      (.Values.dsh.agents.home | default "")
+      (toString .Values.dsh.agents.persistent)
+      (toString $port)
+      | join "\n" | sha256sum) -}}
+
+{{- /* The shared template's persistence path is disabled in the copied
+       context; the PVC volume and its two mounts are supplied explicitly
+       above. Everything else still comes from the common library. */ -}}
+{{- $statefulValues := deepCopy .Values -}}
+{{- $_ := set $statefulValues.persistence "enabled" false -}}
+{{- $statefulCtx := dict
+      "Chart" .Chart
+      "Release" .Release
+      "Values" $statefulValues
+      "Capabilities" .Capabilities
+      "Files" .Files
+      "Template" .Template -}}
+
+{{- include "common.statefulset" (dict
+      "ctx" $statefulCtx
+      "env" $env
+      "envFrom" $envFrom
+      "volumes" $volumes
+      "volumeMounts" $volumeMounts
+      "initContainers" $initContainers
+      "podAnnotations" $podAnnotations) }}
